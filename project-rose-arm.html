@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <!-- Interactive 3D model viewer (renders GLB/glTF in-browser) -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body data-page="project">
 
@@ -32,34 +34,134 @@
         <div class="project-overview">
           <h2>Overview</h2>
           <p>The arm was designed for the University Rover Challenge, where a rover must perform dexterous tasks at range — actuating switches, picking up objects, and typing. Full radial accessibility lets the end effector reach any orientation around the target, and the differential-drive wrist packs two axes of motion into a compact, high-stiffness joint.</p>
-          <p>The team placed <strong>24th out of 114 teams globally</strong> at the 2025 University Rover Competition.</p>
-          <p><em>Add your CAD renders, mechanism breakdowns, and competition photos in the process section below.</em></p>
+          <p>I joined <span class="brand">RoSE</span> as a <strong>contributor in year one</strong>, working on individual joints and subassemblies, then stepped up as <strong>Mechanical Lead in year two</strong> — owning the full arm architecture and directing the mechanical team.</p>
+          <p>The arm runs <strong>6 degrees of freedom</strong> with a differential-drive wrist and 3-phase motor actuation. The team placed <strong>24th out of 114 teams globally</strong> at the 2025 University Rover Competition.</p>
         </div>
 
         <aside class="project-specs">
           <h3>Specifications</h3>
           <dl>
-            <div class="spec-row"><dt>Role</dt><dd>Mechanical Lead</dd></div>
-            <div class="spec-row"><dt>Degrees of freedom</dt><dd>6</dd></div>
-            <div class="spec-row"><dt>Wrist</dt><dd>Differential drive</dd></div>
-            <div class="spec-row"><dt>Actuation</dt><dd>3-phase motors</dd></div>
-            <div class="spec-row"><dt>Result</dt><dd>24th / 114 · URC 2025</dd></div>
-            <div class="spec-row"><dt>Status</dt><dd>Ongoing</dd></div>
+            <div class="spec-row"><dt>Role</dt><dd>Contributor → Mechanical Lead</dd></div>
+            <div class="spec-row"><dt>Team</dt><dd>Multidisciplinary (mech · EE · CS)</dd></div>
+            <div class="spec-row"><dt>Process</dt><dd>CAD · Machining · Assembly</dd></div>
+            <div class="spec-row"><dt>Organization</dt><dd>Team <span class="brand">RoSE</span></dd></div>
           </dl>
         </aside>
       </section>
 
-      <section class="process-section">
+      <section class="process-section process-pile process-pile--polaroid">
         <p class="eyebrow">How it was made</p>
         <h2 class="process-head">Process</h2>
+        <p class="pile-hint">Scroll — each step drops onto the pile.</p>
 
-        <div class="steps">
-          <div class="step"><span class="step-num">01</span><div><h4>Requirements</h4><p>Broke the University Rover Challenge task list into reach, payload, and dexterity targets to size the arm and define the workspace.</p><div class="step-media">IMAGE / DIAGRAM SLOT</div></div></div>
-          <div class="step"><span class="step-num">02</span><div><h4>Kinematic Design</h4><p>Laid out six axes for full radial accessibility so the end effector can approach targets from any orientation.</p><div class="step-media">IMAGE / CAD SLOT</div></div></div>
-          <div class="step"><span class="step-num">03</span><div><h4>Differential-Drive Wrist</h4><p>Designed the wrist as a differential drive to combine pitch and roll into one compact, stiff, backlash-conscious joint.</p><div class="step-media">IMAGE / WRIST SLOT</div></div></div>
-          <div class="step"><span class="step-num">04</span><div><h4>Actuation</h4><p>Integrated 3-phase motor systems for the joint drives, balancing torque, resolution, and thermal behaviour.</p><div class="step-media">IMAGE / DRIVE SLOT</div></div></div>
-          <div class="step"><span class="step-num">05</span><div><h4>Competition</h4><p>Built, tuned, and competed the arm at the 2025 University Rover Competition — 24th of 114 teams globally.</p><div class="step-media">IMAGE / COMPETITION SLOT</div></div></div>
+        <div class="pile">
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/rose-arm-p1.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p1.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">01</span><div><h4>Requirements</h4><p>Turned the URC task list into reach, payload, and dexterity targets.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/rose-arm-p2.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p2.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">02</span><div><h4>Kinematic Design</h4><p>Six axes laid out for full radial accessibility.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/rose-arm-p3.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p3.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">03</span><div><h4>Differential-Drive Wrist</h4><p>Pitch + roll combined into one compact, stiff joint.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/rose-arm-p4.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p4.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">04</span><div><h4>Actuation</h4><p>3-phase motors balancing torque, resolution, and heat.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/rose-arm-p5.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p5.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">05</span><div><h4>Competition</h4><p>Built, tuned, competed — 24th of 114 at URC 2025.</p></div></div>
+          </article>
         </div>
+      </section>
+
+      <section class="gallery-section">
+        <p class="eyebrow">Gallery</p>
+        <h2 class="process-head">Renders &amp; Photos</h2>
+        <p class="gallery-hint">Click any tile to view it full-screen. Drop images in as <code>images/rose-arm-1.jpg</code> … <code>rose-arm-6.jpg</code> and they fill in automatically.</p>
+        <div class="gallery-grid">
+          <figure class="gallery-item" data-caption="CAD assembly — full arm" tabindex="0">
+            <img src="images/rose-arm-1.jpg" alt="CAD assembly — full arm" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-1.jpg</span></div>
+            <figcaption>CAD assembly — full arm</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Differential-drive wrist" tabindex="0">
+            <img src="images/rose-arm-2.jpg" alt="Differential-drive wrist" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-2.jpg</span></div>
+            <figcaption>Differential-drive wrist</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Joint actuation detail" tabindex="0">
+            <img src="images/rose-arm-3.jpg" alt="Joint actuation detail" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-3.jpg</span></div>
+            <figcaption>Joint actuation detail</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="End effector" tabindex="0">
+            <img src="images/rose-arm-4.jpg" alt="End effector" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-4.jpg</span></div>
+            <figcaption>End effector</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Competition — URC 2025" tabindex="0">
+            <img src="images/rose-arm-5.jpg" alt="Competition — URC 2025" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-5.jpg</span></div>
+            <figcaption>Competition — URC 2025</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Team &amp; build" tabindex="0">
+            <img src="images/rose-arm-6.jpg" alt="Team and build" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-6.jpg</span></div>
+            <figcaption>Team &amp; build</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="model-section">
+        <p class="eyebrow">Interactive Model</p>
+        <h2 class="process-head">Explore the Arm</h2>
+        <div class="model-stage">
+          <button class="model-view-btn" data-dir="-1" aria-label="Previous view">‹</button>
+          <div class="model-frame model-frame--sm">
+            <model-viewer
+              src="models/rose-arm.glb"
+              alt="6 DOF Arm — interactive 3D model"
+              camera-controls
+              shadow-intensity="1"
+              exposure="1.1"
+              camera-orbit="35deg 65deg auto"
+              interaction-prompt="none">
+              <div class="model-ph" slot="poster">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
+                <span>Interactive 3D Model</span>
+                <small>Drop your export in as models/rose-arm.glb</small>
+              </div>
+            </model-viewer>
+            <span class="model-view-label">Iso</span>
+          </div>
+          <button class="model-view-btn" data-dir="1" aria-label="Next view">›</button>
+        </div>
+        <p class="model-hint">Arrows change the view · drag to orbit · scroll to zoom</p>
       </section>
 
       <div class="project-next">
