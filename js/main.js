@@ -20,12 +20,12 @@ const SITE = {
   ],
   // Individual project pages — shown in the Projects dropdown.
   projects: [
-    { label: 'Team RoSE 6 DoF Arm',     href: 'project-rose-arm.html' },
+    { label: '6 DOF Arm',               href: 'project-rose-arm.html' },
     { label: '3D-Printed Mini-Bridge',  href: 'project-mini-bridge.html' },
-    { label: 'Steel Bridge · PSWS',     href: 'project-steel-bridge.html' },
+    { label: 'Steel Bridge',            href: 'project-steel-bridge.html' },
     { label: 'Additive Pump Subsystem', href: 'project-soma-pump.html' },
     { label: 'Stair-Climbing Robot',    href: 'project-stair-robot.html' },
-    { label: 'Kealakehe Robotics',      href: 'project-kealakehe.html' },
+    { label: 'FIRST Robotics',          href: 'project-kealakehe.html' },
   ],
 };
 

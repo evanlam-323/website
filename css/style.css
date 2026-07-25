@@ -60,6 +60,9 @@ ul { list-style: none; }
 }
 .eyebrow.dim { color: var(--text-dim); }
 
+/* preserve brand casing (e.g. RoSE, SoMa) inside uppercased labels */
+.brand { text-transform: none; }
+
 /* =========================================================
    HEADER  (injected by main.js) — hidden at top, pops in on scroll
    ========================================================= */
