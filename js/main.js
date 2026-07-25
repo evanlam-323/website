@@ -6,15 +6,12 @@
 
 /* ---- Single source of truth for site-wide content ---- */
 const SITE = {
-  name: 'ELIAS THORNE',
-  email: 'hello@eliasthorne.me',
-  location: 'San Francisco, CA',
-  tagline: 'Mechanical engineering and industrial design. Precision from concept to production.',
+  name: 'EVAN LAM',
+  email: 'evanlam@hawaii.edu',
+  location: 'Honolulu, Hawaiʻi',
+  tagline: 'Mechanical engineering student at UH Mānoa — robotics, additive manufacturing, and precision design.',
   socials: [
-    { label: 'LinkedIn',  href: '#' },
-    { label: 'Instagram', href: '#' },
-    { label: 'Twitter',   href: '#' },
-    { label: 'GitHub',    href: '#' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/evan-lam323' },
   ],
   nav: [
     { label: 'Projects', href: 'index.html#work', children: 'projects' },
@@ -23,10 +20,12 @@ const SITE = {
   ],
   // Individual project pages — shown in the Projects dropdown.
   projects: [
-    { label: 'MK-IV Robotic Arm',     href: 'project-mk-iv.html' },
-    { label: 'Exoskeleton Heat-Sink', href: 'project-heat-sink.html' },
-    { label: 'Lattice Bracket',       href: 'project-lattice-bracket.html' },
-    { label: 'Surgical Micro-Grip',   href: 'project-micro-grip.html' },
+    { label: 'Team RoSE 6 DoF Arm',     href: 'project-rose-arm.html' },
+    { label: '3D-Printed Mini-Bridge',  href: 'project-mini-bridge.html' },
+    { label: 'Steel Bridge · PSWS',     href: 'project-steel-bridge.html' },
+    { label: 'Additive Pump Subsystem', href: 'project-soma-pump.html' },
+    { label: 'Stair-Climbing Robot',    href: 'project-stair-robot.html' },
+    { label: 'Kealakehe Robotics',      href: 'project-kealakehe.html' },
   ],
 };
 
