@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exoskeleton Heat-Sink — Elias Thorne</title>
+  <meta name="description" content="Passive thermal management for wearable robotic exoskeletons — design and build process." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="project">
+
+  <div id="header-mount"></div>
+
+  <main class="section-dark grid-bg">
+    <div class="page-hero">
+      <a class="back-link" href="index.html#work">← Back to Work</a>
+      <p class="eyebrow">Thermal Systems / 2023</p>
+      <h1>Exoskeleton Heat-Sink</h1>
+      <p>Passive thermal management for wearable robotic exoskeletons operating under continuous load, keeping actuator temperatures within safe limits without active cooling.</p>
+    </div>
+
+    <div class="wrap">
+      <div class="project-cover">
+        <span class="tag">FIG. 01 — FIN ARRAY</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+      </div>
+
+      <section class="project-body">
+        <div class="project-overview">
+          <h2>Overview</h2>
+          <p>Wearable exoskeletons dump a surprising amount of heat into a small, enclosed volume next to the wearer. This project delivered a lightweight passive heat-sink that spreads and rejects actuator heat while staying comfortable against the body.</p>
+          <p>The solution combined a topology-optimised fin array with a heat-spreading baseplate, tuned entirely for natural convection so the system carries no fans, pumps, or added failure points.</p>
+          <p><em>Replace this copy with your own project narrative.</em></p>
+        </div>
+
+        <aside class="project-specs">
+          <h3>Specifications</h3>
+          <dl>
+            <div class="spec-row"><dt>Heat load</dt><dd>45 W</dd></div>
+            <div class="spec-row"><dt>ΔT reduction</dt><dd>28 °C</dd></div>
+            <div class="spec-row"><dt>Mass</dt><dd>180 g</dd></div>
+            <div class="spec-row"><dt>Cooling</dt><dd>Passive</dd></div>
+            <div class="spec-row"><dt>Materials</dt><dd>6063 Al · Cu core</dd></div>
+            <div class="spec-row"><dt>Status</dt><dd>Validated</dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="process-section">
+        <p class="eyebrow">How it was made</p>
+        <h2 class="process-head">Process</h2>
+
+        <div class="steps">
+          <div class="step"><span class="step-num">01</span><div><h4>Thermal Budget</h4><p>Measured actuator dissipation across a typical gait cycle and set a maximum skin-contact temperature to design against.</p><div class="step-media">IMAGE / DATA SLOT</div></div></div>
+          <div class="step"><span class="step-num">02</span><div><h4>Concept &amp; CAD</h4><p>Modelled several fin geometries and a copper-cored spreader baseplate, parameterising fin pitch and height for later optimisation.</p><div class="step-media">IMAGE / CAD SLOT</div></div></div>
+          <div class="step"><span class="step-num">03</span><div><h4>CFD Simulation</h4><p>Ran natural-convection CFD to compare candidates, converging on a fin array that maximised surface area without choking airflow between fins.</p><div class="step-media">IMAGE / CFD SLOT</div></div></div>
+          <div class="step"><span class="step-num">04</span><div><h4>Prototyping</h4><p>Machined the baseplate, bonded the copper core, and assembled the fin stack with thermal interface material for bench testing.</p><div class="step-media">IMAGE / BUILD SLOT</div></div></div>
+          <div class="step"><span class="step-num">05</span><div><h4>Bench Validation</h4><p>Loaded the sink with a resistive heater and logged steady-state temperatures with thermocouples, confirming the 28 °C reduction target.</p><div class="step-media">IMAGE / TEST SLOT</div></div></div>
+        </div>
+      </section>
+
+      <div class="project-next">
+        <span class="label">Next Project</span>
+        <a href="project-lattice-bracket.html">Lattice Bracket →</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="js/main.js"></script>
+</body>
+</html>
