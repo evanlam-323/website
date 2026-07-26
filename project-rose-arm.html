@@ -12,7 +12,7 @@
   <!-- Interactive 3D model viewer (renders GLB/glTF in-browser) -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
-<body data-page="project">
+<body data-page="project" data-project="rose-arm">
 
   <div id="header-mount"></div>
 
@@ -25,7 +25,8 @@
     </div>
 
     <div class="wrap">
-      <div class="project-cover">
+      <div class="project-cover" data-photo-cover>
+        <img alt="" onerror="this.closest('.project-cover').classList.add('is-empty'); this.remove();" />
         <span class="tag">FIG. 01 — 6-DOF ARM</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M8 3H5a2 2 0 0 0-2 2v6"/><path d="M3 15v4a2 2 0 0 0 2 2h6"/><circle cx="16" cy="16" r="5"/><path d="M16 13v-2M16 21v-2M13 16h-2M21 16h-2"/></svg>
       </div>
@@ -55,39 +56,44 @@
         <p class="pile-hint">Scroll — each step drops onto the pile.</p>
 
         <div class="pile">
-          <article class="pile-card">
+          <article class="pile-card" data-slot="process-1">
             <div class="card-media">
-              <img src="images/rose-arm-p1.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
-              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p1.jpg</span></div>
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-1</span></div>
             </div>
+            <p class="card-photo-cap" data-cap></p>
             <div class="card-cap"><span class="card-num">01</span><div><h4>Requirements</h4><p>Turned the URC task list into reach, payload, and dexterity targets.</p></div></div>
           </article>
-          <article class="pile-card">
+          <article class="pile-card" data-slot="process-2">
             <div class="card-media">
-              <img src="images/rose-arm-p2.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
-              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p2.jpg</span></div>
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-2</span></div>
             </div>
+            <p class="card-photo-cap" data-cap></p>
             <div class="card-cap"><span class="card-num">02</span><div><h4>Kinematic Design</h4><p>Six axes laid out for full radial accessibility.</p></div></div>
           </article>
-          <article class="pile-card">
+          <article class="pile-card" data-slot="process-3">
             <div class="card-media">
-              <img src="images/rose-arm-p3.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
-              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p3.jpg</span></div>
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-3</span></div>
             </div>
+            <p class="card-photo-cap" data-cap></p>
             <div class="card-cap"><span class="card-num">03</span><div><h4>Differential-Drive Wrist</h4><p>Pitch + roll combined into one compact, stiff joint.</p></div></div>
           </article>
-          <article class="pile-card">
+          <article class="pile-card" data-slot="process-4">
             <div class="card-media">
-              <img src="images/rose-arm-p4.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
-              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p4.jpg</span></div>
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-4</span></div>
             </div>
+            <p class="card-photo-cap" data-cap></p>
             <div class="card-cap"><span class="card-num">04</span><div><h4>Actuation</h4><p>3-phase motors balancing torque, resolution, and heat.</p></div></div>
           </article>
-          <article class="pile-card">
+          <article class="pile-card" data-slot="process-5">
             <div class="card-media">
-              <img src="images/rose-arm-p5.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
-              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-p5.jpg</span></div>
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-5</span></div>
             </div>
+            <p class="card-photo-cap" data-cap></p>
             <div class="card-cap"><span class="card-num">05</span><div><h4>Competition</h4><p>Built, tuned, competed — 24th of 114 at URC 2025.</p></div></div>
           </article>
         </div>
@@ -96,45 +102,8 @@
       <section class="gallery-section">
         <p class="eyebrow">Gallery</p>
         <h2 class="process-head">Renders &amp; Photos</h2>
-        <p class="gallery-hint">Click any tile to view it full-screen. Drop images in as <code>images/rose-arm-1.jpg</code> … <code>rose-arm-6.jpg</code> and they fill in automatically.</p>
-        <div class="gallery-grid">
-          <figure class="gallery-item" data-caption="CAD assembly — full arm" tabindex="0">
-            <img src="images/rose-arm-1.jpg" alt="CAD assembly — full arm" loading="lazy"
-                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
-            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-1.jpg</span></div>
-            <figcaption>CAD assembly — full arm</figcaption>
-          </figure>
-          <figure class="gallery-item" data-caption="Differential-drive wrist" tabindex="0">
-            <img src="images/rose-arm-2.jpg" alt="Differential-drive wrist" loading="lazy"
-                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
-            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-2.jpg</span></div>
-            <figcaption>Differential-drive wrist</figcaption>
-          </figure>
-          <figure class="gallery-item" data-caption="Joint actuation detail" tabindex="0">
-            <img src="images/rose-arm-3.jpg" alt="Joint actuation detail" loading="lazy"
-                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
-            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-3.jpg</span></div>
-            <figcaption>Joint actuation detail</figcaption>
-          </figure>
-          <figure class="gallery-item" data-caption="End effector" tabindex="0">
-            <img src="images/rose-arm-4.jpg" alt="End effector" loading="lazy"
-                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
-            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-4.jpg</span></div>
-            <figcaption>End effector</figcaption>
-          </figure>
-          <figure class="gallery-item" data-caption="Competition — URC 2025" tabindex="0">
-            <img src="images/rose-arm-5.jpg" alt="Competition — URC 2025" loading="lazy"
-                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
-            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-5.jpg</span></div>
-            <figcaption>Competition — URC 2025</figcaption>
-          </figure>
-          <figure class="gallery-item" data-caption="Team &amp; build" tabindex="0">
-            <img src="images/rose-arm-6.jpg" alt="Team and build" loading="lazy"
-                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
-            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>rose-arm-6.jpg</span></div>
-            <figcaption>Team &amp; build</figcaption>
-          </figure>
-        </div>
+        <p class="gallery-hint">Click any tile to view it full-screen. Add or re-caption photos in <code>js/photos.js</code>, or open this page with <code>#edit</code> to edit captions live.</p>
+        <div class="gallery-grid" data-gallery></div>
       </section>
 
       <section class="model-section">
@@ -172,6 +141,7 @@
   </main>
 
   <div id="footer-mount"></div>
+  <script src="js/photos.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

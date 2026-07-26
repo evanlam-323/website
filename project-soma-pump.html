@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body data-page="project">
+<body data-page="project" data-project="soma-pump">
 
   <div id="header-mount"></div>
 
@@ -23,7 +23,8 @@
     </div>
 
     <div class="wrap">
-      <div class="project-cover">
+      <div class="project-cover" data-photo-cover>
+        <img alt="" onerror="this.closest('.project-cover').classList.add('is-empty'); this.remove();" />
         <span class="tag">FIG. 01 — PUMP SUBSYSTEM</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg>
       </div>
@@ -51,11 +52,18 @@
         <h2 class="process-head">Process</h2>
 
         <div class="steps">
-          <div class="step"><span class="step-num">01</span><div><h4>Requirements</h4><p>Defined flow, pressure, and control targets for reliably extruding elastic and compliant materials.</p><div class="step-media">IMAGE / REQUIREMENTS SLOT</div></div></div>
-          <div class="step"><span class="step-num">02</span><div><h4>Pump Design</h4><p>Designed the pump subsystem to meter and drive material consistently to the nozzle.</p><div class="step-media">IMAGE / CAD SLOT</div></div></div>
-          <div class="step"><span class="step-num">03</span><div><h4>Integration</h4><p>Worked with the team to tie in static mixers and heating elements so material is properly conditioned.</p><div class="step-media">IMAGE / INTEGRATION SLOT</div></div></div>
-          <div class="step"><span class="step-num">04</span><div><h4>Extrusion Testing</h4><p>Tested extrusion quality and tuned the subsystem for clean, repeatable construction.</p><div class="step-media">IMAGE / TEST SLOT</div></div></div>
+          <div class="step" data-slot="process-1"><span class="step-num">01</span><div><h4>Requirements</h4><p>Defined flow, pressure, and control targets for reliably extruding elastic and compliant materials.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-1</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+          <div class="step" data-slot="process-2"><span class="step-num">02</span><div><h4>Pump Design</h4><p>Designed the pump subsystem to meter and drive material consistently to the nozzle.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-2</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+          <div class="step" data-slot="process-3"><span class="step-num">03</span><div><h4>Integration</h4><p>Worked with the team to tie in static mixers and heating elements so material is properly conditioned.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-3</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+          <div class="step" data-slot="process-4"><span class="step-num">04</span><div><h4>Extrusion Testing</h4><p>Tested extrusion quality and tuned the subsystem for clean, repeatable construction.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-4</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
         </div>
+      </section>
+
+      <section class="gallery-section">
+        <p class="eyebrow">Gallery</p>
+        <h2 class="process-head">Renders &amp; Photos</h2>
+        <p class="gallery-hint">Click any tile to view it full-screen. Add or re-caption photos in <code>js/photos.js</code>, or open this page with <code>#edit</code> to edit captions live.</p>
+        <div class="gallery-grid" data-gallery></div>
       </section>
 
       <div class="project-next">
@@ -66,6 +74,7 @@
   </main>
 
   <div id="footer-mount"></div>
+  <script src="js/photos.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

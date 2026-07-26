@@ -798,29 +798,21 @@ ul { list-style: none; }
   position: sticky;
   width: min(100%, 480px);
   margin: 0 auto 30px;
-  opacity: 0;
-  transition: opacity .6s ease, transform .7s cubic-bezier(.2, .85, .25, 1);
+  opacity: 0;                 /* JS (initProcessPile) drives opacity + transform on scroll */
+  transform-origin: center 40%;
   will-change: transform, opacity;
 }
-/* stack offsets + per-card random tilt (JS re-centres the tops on lock) */
-.pile-card:nth-child(1) { top: 118px; z-index: 1; --tilt: -3deg;   }
-.pile-card:nth-child(2) { top: 130px; z-index: 2; --tilt: 2.4deg;  }
-.pile-card:nth-child(3) { top: 142px; z-index: 3; --tilt: -1.4deg; }
-.pile-card:nth-child(4) { top: 154px; z-index: 4; --tilt: 2.8deg;  }
-.pile-card:nth-child(5) { top: 166px; z-index: 5; --tilt: -2.2deg; }
-
-/* polaroid: the card materialises on top of the previous one a touch larger,
-   then shrinks to size and fades in — the "dropped onto the pile" illusion */
-.process-pile--polaroid .pile-card { transform: scale(1.16) rotate(var(--tilt)); }
-.process-pile--polaroid .pile-card.is-in { opacity: 1; transform: scale(1) rotate(var(--tilt)); }
-
-/* index: keeps its drop-in with a slight tilt */
-.process-pile--index .pile-card { transform: translateY(-80px) rotate(var(--tilt)); }
-.process-pile--index .pile-card.is-in { opacity: 1; transform: translateY(0) rotate(var(--tilt)); }
+/* All cards pin at the SAME spot (JS sets `top`) and stack by z-index, so each
+   one lands fully on top of the last — no next-card preview showing through.
+   Only the per-card tilt lives here; the scroll-driven scale/opacity is in JS. */
+.pile-card:nth-child(1) { z-index: 1; --tilt: -2.6deg; }
+.pile-card:nth-child(2) { z-index: 2; --tilt: 2.2deg;  }
+.pile-card:nth-child(3) { z-index: 3; --tilt: -1.4deg; }
+.pile-card:nth-child(4) { z-index: 4; --tilt: 2.6deg;  }
+.pile-card:nth-child(5) { z-index: 5; --tilt: -2deg;   }
 
 @media (prefers-reduced-motion: reduce) {
-  .pile-card { transition: opacity .3s ease; transform: rotate(var(--tilt)) !important; }
-  .pile-card.is-in { opacity: 1; }
+  .pile-card { opacity: 1; transform: rotate(var(--tilt)); }
 }
 
 .card-media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--bg-2); }
@@ -988,6 +980,85 @@ ul { list-style: none; }
   font-size: 1.15rem; color: #fff; margin-bottom: 10px;
 }
 .safety-card p { color: var(--text-dim); font-size: .92rem; line-height: 1.55; }
+
+/* ===== photo captions + live caption editor ===== */
+.gallery-empty {
+  grid-column: 1 / -1; color: var(--text-dim2); font-size: .9rem; padding: 24px 0;
+}
+.gallery-empty code { font-family: var(--font-mono); font-size: .82em; color: var(--accent); }
+
+/* the "steps" list media boxes hold a photo the same way the pile cards do */
+.step-media { position: relative; overflow: hidden; }
+.step-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.step-media .media-ph span { text-transform: none; }
+
+/* per-photo caption on process cards — hidden until you're editing */
+.card-photo-cap {
+  display: none; margin: 10px 2px 0;
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .06em;
+  color: var(--text-dim); line-height: 1.4;
+}
+.process-pile--polaroid .card-photo-cap { color: #55554f; padding: 0 4px; }
+.editing-captions .card-photo-cap { display: block; }
+/* a process slot with no photo assigned has nothing to caption — keep it hidden */
+.editing-captions [data-slot]:not([data-file]) .card-photo-cap { display: none; }
+
+/* editing mode: reveal captions and show they're editable */
+.editing-captions .gallery-item figcaption { opacity: 1; }
+.editing-captions .cap-editable {
+  outline: 1px dashed var(--accent); outline-offset: 2px; cursor: text; border-radius: 2px;
+  transition: background .15s ease;
+}
+.editing-captions .cap-editable:hover { background: rgba(234,74,42,.08); }
+.editing-captions .cap-editable:focus { outline-style: solid; background: rgba(234,74,42,.12); }
+.editing-captions .cap-editable[data-empty]::before {
+  content: "click to add a caption"; opacity: .55; font-style: italic;
+}
+
+.cap-toolbar {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 250;
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+.cap-toolbar .cap-badge {
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent); padding-right: 4px;
+}
+.cap-toolbar button {
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .04em;
+  color: #fff; background: var(--bg-2); border: 1px solid var(--line);
+  padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: border-color .2s ease, color .2s ease;
+}
+.cap-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.cap-toolbar button[data-act="copy"] { border-color: var(--accent); color: var(--accent); }
+
+.cap-toast {
+  position: fixed; left: 50%; bottom: 78px; transform: translate(-50%, 8px); z-index: 251;
+  background: #fff; color: #111; font-size: .82rem; padding: 10px 16px; border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4); opacity: 0; pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease; max-width: 80vw; text-align: center;
+}
+.cap-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+.cap-fallback {
+  position: fixed; inset: 0; z-index: 260; display: grid; place-items: center;
+  background: rgba(6,6,8,.9); padding: 24px;
+}
+.cap-fallback-inner {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 20px; width: min(680px, 92vw); display: grid; gap: 12px;
+}
+.cap-fallback-inner p { color: var(--text-dim); font-size: .9rem; }
+.cap-fallback-inner code { font-family: var(--font-mono); color: var(--accent); }
+.cap-fallback-inner textarea {
+  width: 100%; height: 300px; font-family: var(--font-mono); font-size: .78rem;
+  background: var(--bg-2); color: #eee; border: 1px solid var(--line); border-radius: 6px; padding: 12px;
+}
+.cap-fallback-inner button {
+  justify-self: end; font-family: var(--font-mono); font-size: .74rem; color: #fff;
+  background: var(--bg-2); border: 1px solid var(--line); padding: 8px 16px; border-radius: 6px; cursor: pointer;
+}
 
 /* reveal on scroll */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s var(--ease), transform .7s var(--ease); }

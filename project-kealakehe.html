@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body data-page="project">
+<body data-page="project" data-project="kealakehe">
 
   <div id="header-mount"></div>
 
@@ -23,7 +23,8 @@
     </div>
 
     <div class="wrap">
-      <div class="project-cover">
+      <div class="project-cover" data-photo-cover>
+        <img alt="" onerror="this.closest('.project-cover').classList.add('is-empty'); this.remove();" />
         <span class="tag">FIG. 01 — COMPETITION ROBOT</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M8 4h8M9 13h.01M15 13h.01M9 17h6"/></svg>
       </div>
@@ -51,12 +52,19 @@
         <h2 class="process-head">Process</h2>
 
         <div class="steps">
-          <div class="step"><span class="step-num">01</span><div><h4>Game Analysis</h4><p>Broke down each season's game to decide what the robot needed to do well.</p><div class="step-media">IMAGE / STRATEGY SLOT</div></div></div>
-          <div class="step"><span class="step-num">02</span><div><h4>Design</h4><p>Designed subsystems and mechanisms to score the priority tasks.</p><div class="step-media">IMAGE / CAD SLOT</div></div></div>
-          <div class="step"><span class="step-num">03</span><div><h4>Fabrication</h4><p>Machined, printed, and assembled parts — putting in 10+ hours weekly on the build.</p><div class="step-media">IMAGE / BUILD SLOT</div></div></div>
-          <div class="step"><span class="step-num">04</span><div><h4>Mentorship</h4><p>Helped teach newer members fabrication and design as the team grew.</p><div class="step-media">IMAGE / TEAM SLOT</div></div></div>
-          <div class="step"><span class="step-num">05</span><div><h4>Competition</h4><p>Competed to World Championship qualification (top &lt;10%) and 18th in division.</p><div class="step-media">IMAGE / COMPETITION SLOT</div></div></div>
+          <div class="step" data-slot="process-1"><span class="step-num">01</span><div><h4>Game Analysis</h4><p>Broke down each season's game to decide what the robot needed to do well.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-1</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+          <div class="step" data-slot="process-2"><span class="step-num">02</span><div><h4>Design</h4><p>Designed subsystems and mechanisms to score the priority tasks.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-2</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+          <div class="step" data-slot="process-3"><span class="step-num">03</span><div><h4>Fabrication</h4><p>Machined, printed, and assembled parts — putting in 10+ hours weekly on the build.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-3</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+          <div class="step" data-slot="process-4"><span class="step-num">04</span><div><h4>Mentorship</h4><p>Helped teach newer members fabrication and design as the team grew.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-4</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+          <div class="step" data-slot="process-5"><span class="step-num">05</span><div><h4>Competition</h4><p>Competed to World Championship qualification (top &lt;10%) and 18th in division.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-5</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
         </div>
+      </section>
+
+      <section class="gallery-section">
+        <p class="eyebrow">Gallery</p>
+        <h2 class="process-head">Renders &amp; Photos</h2>
+        <p class="gallery-hint">Click any tile to view it full-screen. Add or re-caption photos in <code>js/photos.js</code>, or open this page with <code>#edit</code> to edit captions live.</p>
+        <div class="gallery-grid" data-gallery></div>
       </section>
 
       <div class="project-next">
@@ -67,6 +75,7 @@
   </main>
 
   <div id="footer-mount"></div>
+  <script src="js/photos.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

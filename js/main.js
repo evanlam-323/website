@@ -316,33 +316,261 @@ function initModelViewer() {
   apply();
 }
 
-/* ---- Picture-book process: drop each card onto the pile as it enters ---- */
+/* ---- Picture-book process: each card is "dropped" onto the pile ----
+   All cards are sticky-pinned at the SAME spot, so a card fully lands on top of
+   the previous one — you never see the next card peeking as a preview. The drop
+   itself is driven by scroll position: as a card nears its landing spot it fades
+   in while shrinking from slightly-larger down to 1:1, so it reads as being
+   placed on top of the stack. */
 function initProcessPile() {
-  const cards = document.querySelectorAll('.pile-card');
+  const pile = document.querySelector('.process-pile .pile');
+  if (!pile) return;
+  const cards = [...pile.querySelectorAll('.pile-card')];
   if (!cards.length) return;
 
-  // Centre each card vertically when it "locks" (sticky), so the whole card —
-  // photo and caption — stays on screen. A small per-card stagger keeps the
-  // pile fanned so earlier cards still peek out underneath.
   const header = document.getElementById('siteHeader');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tilts = cards.map(c =>
+    (getComputedStyle(c).getPropertyValue('--tilt') || '0deg').trim() || '0deg');
+
+  let pinTop = 140;
+  const DROP = 300; // px of scroll over which a card grows -> shrinks & fades in
+
+  const render = () => {
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      if (reduce) { card.style.opacity = 1; card.style.transform = `rotate(${tilts[i]})`; continue; }
+      const rectTop = card.getBoundingClientRect().top;
+      let p = (pinTop + DROP - rectTop) / DROP;   // 0 = approaching, 1 = landed
+      p = p < 0 ? 0 : p > 1 ? 1 : p;
+      const scale = 1.16 - 0.16 * p;
+      card.style.opacity = p;
+      card.style.transform = `scale(${scale.toFixed(3)}) rotate(${tilts[i]})`;
+    }
+  };
+
   const layout = () => {
     const headH = header ? header.offsetHeight : 72;
-    cards.forEach((card, i) => {
-      const cardH = card.offsetHeight;
-      const centred = Math.max(headH + 16, (window.innerHeight - cardH) / 2);
-      card.style.top = (centred + i * 10) + 'px';
-    });
+    const tallest = Math.max(...cards.map(c => c.offsetHeight));
+    pinTop = Math.max(headH + 20, Math.round((window.innerHeight - tallest) / 2));
+    cards.forEach(c => { c.style.top = pinTop + 'px'; });
+    render();
   };
+
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { render(); ticking = false; });
+  };
+
   layout();
   window.addEventListener('resize', layout, { passive: true });
   window.addEventListener('load', layout);
+  window.addEventListener('scroll', onScroll, { passive: true });
+}
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+/* ---- Photo label sheet: place each photo from js/photos.js into its slot ----
+   Every project page carries data-project on <body>. This reads window.PHOTOS,
+   keeps only the rows for this project, and drops each one into place:
+     step "cover"        -> the .project-cover image
+     step "process-N"    -> the pile card marked data-slot="process-N"
+     step "gallery"      -> a tile built into the [data-gallery] grid
+   Captions come from the sheet but can be overridden live by the editor
+   (stored per-file in localStorage) — see initCaptionEditor. */
+const CAPTION_KEY = 'photoCaptions';
+
+function loadCaptionOverrides() {
+  try { return JSON.parse(localStorage.getItem(CAPTION_KEY) || '{}'); }
+  catch { return {}; }
+}
+function captionFor(entry, overrides) {
+  const o = overrides[entry.file];
+  return (o != null ? o : entry.caption) || '';
+}
+
+function initPhotos() {
+  const project = document.body.dataset.project;
+  if (!project || !Array.isArray(window.PHOTOS)) return;
+  const overrides = loadCaptionOverrides();
+  const rows = window.PHOTOS.filter(p => p.project === project);
+  const find = step => rows.find(p => p.step === step);
+
+  // -- Cover --
+  const cover = document.querySelector('[data-photo-cover]');
+  if (cover) {
+    const entry = find('cover');
+    const img = cover.querySelector('img');
+    if (entry && img) {
+      cover.dataset.file = entry.file;
+      img.src = 'images/' + entry.file;
+      img.alt = captionFor(entry, overrides);
+    } else {
+      cover.classList.add('is-empty');
+      if (img) img.remove();
+    }
+  }
+
+  // -- Process steps (works for both the "pile" cards and the "steps" list) --
+  document.querySelectorAll('[data-slot^="process-"]').forEach(slot => {
+    const entry = find(slot.dataset.slot);
+    const img = slot.querySelector('img');
+    const media = (img && img.closest('.card-media, .step-media')) || slot.querySelector('.card-media, .step-media') || slot;
+    const cap = slot.querySelector('.card-photo-cap');
+    if (entry && img) {
+      slot.dataset.file = entry.file;
+      img.src = 'images/' + entry.file;
+      img.alt = captionFor(entry, overrides);
+      if (cap) cap.textContent = captionFor(entry, overrides);
+    } else {
+      if (media && media.classList) media.classList.add('is-empty');
+      if (img) img.remove();
+    }
+  });
+
+  // -- Gallery (built from every "gallery" row) --
+  const grid = document.querySelector('[data-gallery]');
+  if (grid) {
+    const gal = rows.filter(p => p.step === 'gallery');
+    grid.innerHTML = '';
+    if (!gal.length) {
+      grid.innerHTML = `<p class="gallery-empty">No gallery photos yet — add rows with <code>step: "gallery"</code> in <code>js/photos.js</code>.</p>`;
+    }
+    gal.forEach(entry => {
+      const cap = captionFor(entry, overrides);
+      const fig = document.createElement('figure');
+      fig.className = 'gallery-item';
+      fig.tabIndex = 0;
+      fig.dataset.caption = cap;
+      fig.dataset.file = entry.file;
+      const img = document.createElement('img');
+      img.src = 'images/' + entry.file;
+      img.alt = cap;
+      img.loading = 'lazy';
+      img.addEventListener('error', () => {
+        fig.classList.add('is-empty'); img.remove();
+      });
+      const ph = document.createElement('div');
+      ph.className = 'gallery-ph';
+      ph.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>${entry.file}</span>`;
+      const capEl = document.createElement('figcaption');
+      capEl.dataset.cap = '';
+      capEl.textContent = cap;
+      fig.append(img, ph, capEl);
+      grid.appendChild(fig);
     });
-  }, { threshold: 0.25 });
-  cards.forEach(c => io.observe(c));
+  }
+}
+
+/* ---- Live caption editor ----
+   Add  #edit  to any project-page URL (…/project-uh88-weather.html#edit) to
+   turn on editing. Captions become type-in fields; changes save to this
+   browser instantly. "Copy label sheet" hands you the full js/photos.js text
+   with your captions merged in — paste it over the file to make them
+   permanent (and visible to everyone / on every device). */
+function editingRequested() {
+  return location.hash.replace('#', '') === 'edit'
+      || new URLSearchParams(location.search).has('edit');
+}
+
+function initCaptionEditor() {
+  if (!document.body.dataset.project) return;
+
+  const enable = () => {
+    if (document.body.classList.contains('editing-captions')) return;
+    document.body.classList.add('editing-captions');
+    buildCaptionToolbar();
+    wireEditableCaptions();
+  };
+
+  if (editingRequested()) enable();
+  // Allow toggling on without a reload if the hash is added later.
+  window.addEventListener('hashchange', () => { if (editingRequested()) enable(); });
+}
+
+function wireEditableCaptions() {
+  document.querySelectorAll('[data-cap]').forEach(el => {
+    el.setAttribute('contenteditable', 'true');
+    el.setAttribute('spellcheck', 'true');
+    el.classList.add('cap-editable');
+    if (!el.textContent.trim()) el.dataset.empty = '';
+    el.addEventListener('focus', () => delete el.dataset.empty);
+    el.addEventListener('input', () => {
+      const host = el.closest('[data-file]');
+      if (!host) return;
+      const text = el.textContent.replace(/\s+/g, ' ').trim();
+      const ov = loadCaptionOverrides();
+      ov[host.dataset.file] = text;
+      localStorage.setItem(CAPTION_KEY, JSON.stringify(ov));
+      const fig = el.closest('.gallery-item');
+      if (fig) fig.dataset.caption = text; // keep lightbox in sync
+    });
+    // Enter commits instead of adding newlines.
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+  });
+}
+
+function buildCaptionToolbar() {
+  const bar = document.createElement('div');
+  bar.className = 'cap-toolbar';
+  bar.innerHTML = `
+    <span class="cap-badge">✎ Editing captions</span>
+    <button type="button" data-act="copy">Copy label sheet</button>
+    <button type="button" data-act="reset">Reset my edits</button>
+    <button type="button" data-act="done">Done</button>`;
+  document.body.appendChild(bar);
+
+  const toast = msg => {
+    let t = document.querySelector('.cap-toast');
+    if (!t) { t = document.createElement('div'); t.className = 'cap-toast'; document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
+  };
+
+  bar.addEventListener('click', e => {
+    const act = e.target.dataset.act;
+    if (act === 'copy') {
+      const text = buildLabelSheetText();
+      navigator.clipboard.writeText(text).then(
+        () => toast('Copied — paste it over js/photos.js to save for good.'),
+        () => showCopyFallback(text)
+      );
+    } else if (act === 'reset') {
+      localStorage.removeItem(CAPTION_KEY);
+      toast('Your local caption edits were cleared. Reloading…');
+      setTimeout(() => location.reload(), 700);
+    } else if (act === 'done') {
+      history.replaceState(null, '', location.pathname + location.search);
+      location.reload();
+    }
+  });
+}
+
+// Regenerate the whole window.PHOTOS array with edited captions merged in.
+function buildLabelSheetText() {
+  const overrides = loadCaptionOverrides();
+  const esc = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const rows = window.PHOTOS.map(p => {
+    const caption = overrides[p.file] != null ? overrides[p.file] : p.caption;
+    return `  { file: "${esc(p.file)}", project: "${esc(p.project)}", step: "${esc(p.step)}", caption: "${esc(caption)}" },`;
+  }).join('\n');
+  return `window.PHOTOS = [\n${rows}\n];\n`;
+}
+
+function showCopyFallback(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'cap-fallback';
+  wrap.innerHTML = `<div class="cap-fallback-inner">
+    <p>Copy this and paste it over <code>js/photos.js</code>:</p>
+    <textarea readonly></textarea>
+    <button type="button">Close</button></div>`;
+  wrap.querySelector('textarea').value = text;
+  wrap.querySelector('button').addEventListener('click', () => wrap.remove());
+  wrap.addEventListener('click', e => { if (e.target === wrap) wrap.remove(); });
+  document.body.appendChild(wrap);
+  wrap.querySelector('textarea').select();
 }
 
 /* ---- boot ---- */
@@ -353,7 +581,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initReveal();
   initFilters();
   initWorkFilters();
+  initPhotos();
   initGallery();
   initModelViewer();
   initProcessPile();
+  initCaptionEditor();
 });
