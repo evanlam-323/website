@@ -840,6 +840,45 @@ ul { list-style: none; }
 .process-pile--index .card-head h4 { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; color: #fff; font-size: 1.1rem; }
 .process-pile--index .pile-card > p { color: var(--text-dim); font-size: .9rem; line-height: 1.5; margin-top: 16px; }
 
+/* --- per-step photo pager (mini-bridge): the WHOLE card face slides ---
+   Each slide carries its own heading, photo, and caption, so paging swaps in a
+   fresh "polaroid". Arrows sit OUTSIDE the card border (absolutely positioned
+   against the .pile-card, which is the sticky/positioned ancestor). */
+.card-pager { position: static; }
+.pager-viewport { position: relative; overflow: hidden; }
+.pager-track { display: flex; transition: transform .45s var(--ease); will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .pager-track { transition: none; } }
+.pager-slide { flex: 0 0 100%; margin: 0; min-width: 0; }
+.card-desc { color: var(--text-dim); font-size: .9rem; line-height: 1.5; margin-top: 14px; }
+.pager-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 4;
+  width: 38px; height: 38px; display: grid; place-items: center;
+  background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .28); border-radius: 50%;
+  color: #fff; font-size: 1.4rem; line-height: 1; cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+.pager-arrow:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-50%) scale(1.1); }
+.pager-prev { left: -54px; }
+.pager-next { right: -54px; }
+.pager-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
+/* only the front card in the pile shows its (outside-the-border) controls,
+   so cards stacked behind don't leave ghost arrows poking out the sides */
+.pager-arrow, .pager-dots { transition: opacity .2s ease; }
+.pile-card:not(.is-front) .pager-arrow,
+.pile-card:not(.is-front) .pager-dots { opacity: 0; pointer-events: none; }
+/* tight viewports: no room outside the card, so tuck the arrows back to its edges */
+@media (max-width: 640px) {
+  .pager-prev { left: 6px; }
+  .pager-next { right: 6px; }
+  .pager-arrow { background: rgba(0, 0, 0, .55); }
+}
+.pager-dot {
+  width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  background: rgba(255,255,255,.28); transition: background .2s ease, transform .2s ease;
+}
+.pager-dot:hover { background: rgba(255,255,255,.5); }
+.pager-dot.is-active { background: var(--accent); transform: scale(1.25); }
+
 /* interactive 3D model viewer */
 .model-section { padding-top: clamp(50px, 7vw, 90px); }
 .model-frame {

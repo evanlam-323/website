@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body data-page="project" data-project="kealakehe">
 
@@ -47,16 +47,57 @@
         </aside>
       </section>
 
-      <section class="process-section">
+      <section class="process-section process-pile process-pile--index">
         <p class="eyebrow">How it was made</p>
         <h2 class="process-head">Process</h2>
+        <p class="pile-hint">Scroll — each step drops onto the pile.</p>
 
-        <div class="steps">
-          <div class="step" data-slot="process-1"><span class="step-num">01</span><div><h4>Game Analysis</h4><p>Broke down each season's game to decide what the robot needed to do well.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-1</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
-          <div class="step" data-slot="process-2"><span class="step-num">02</span><div><h4>Design</h4><p>Designed subsystems and mechanisms to score the priority tasks.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-2</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
-          <div class="step" data-slot="process-3"><span class="step-num">03</span><div><h4>Fabrication</h4><p>Machined, printed, and assembled parts — putting in 10+ hours weekly on the build.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-3</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
-          <div class="step" data-slot="process-4"><span class="step-num">04</span><div><h4>Mentorship</h4><p>Helped teach newer members fabrication and design as the team grew.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-4</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
-          <div class="step" data-slot="process-5"><span class="step-num">05</span><div><h4>Competition</h4><p>Competed to World Championship qualification (top &lt;10%) and 18th in division.</p><div class="step-media"><img alt="" loading="lazy" onerror="this.closest('.step-media').classList.add('is-empty'); this.remove();" /><div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-5</span></div></div><p class="card-photo-cap" data-cap></p></div></div>
+        <div class="pile">
+          <article class="pile-card" data-slot="process-1">
+            <div class="card-head"><span class="card-num">01</span><h4>Game Analysis</h4></div>
+            <div class="card-media">
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-1</span></div>
+            </div>
+            <p class="card-photo-cap" data-cap></p>
+            <p>Broke down each season's game to decide what the robot needed to do well.</p>
+          </article>
+          <article class="pile-card" data-slot="process-2">
+            <div class="card-head"><span class="card-num">02</span><h4>Design</h4></div>
+            <div class="card-media">
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-2</span></div>
+            </div>
+            <p class="card-photo-cap" data-cap></p>
+            <p>Designed subsystems and mechanisms to score the priority tasks.</p>
+          </article>
+          <article class="pile-card" data-slot="process-3">
+            <div class="card-head"><span class="card-num">03</span><h4>Fabrication</h4></div>
+            <div class="card-media">
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-3</span></div>
+            </div>
+            <p class="card-photo-cap" data-cap></p>
+            <p>Machined, printed, and assembled parts — putting in 10+ hours weekly on the build.</p>
+          </article>
+          <article class="pile-card" data-slot="process-4">
+            <div class="card-head"><span class="card-num">04</span><h4>Mentorship</h4></div>
+            <div class="card-media">
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-4</span></div>
+            </div>
+            <p class="card-photo-cap" data-cap></p>
+            <p>Helped teach newer members fabrication and design as the team grew.</p>
+          </article>
+          <article class="pile-card" data-slot="process-5">
+            <div class="card-head"><span class="card-num">05</span><h4>Competition</h4></div>
+            <div class="card-media">
+              <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-5</span></div>
+            </div>
+            <p class="card-photo-cap" data-cap></p>
+            <p>Competed to World Championship qualification (top &lt;10%) and 18th in division.</p>
+          </article>
         </div>
       </section>
 
@@ -75,7 +116,7 @@
   </main>
 
   <div id="footer-mount"></div>
-  <script src="js/photos.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/photos.js?v=6"></script>
+  <script src="js/main.js?v=6"></script>
 </body>
 </html>

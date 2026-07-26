@@ -15,57 +15,104 @@ Context for another chat/session to continue the work. Delete this file when don
 - **`.brand` CSS class** (`text-transform: none`) preserves mixed-case names like **RoSE** / **SoMa** inside otherwise-uppercased labels. Wrap just the brand word: `Team <span class="brand">RoSE</span>`.
 - **`.reveal`** = fade-in-on-scroll (IntersectionObserver in main.js).
 - **Theme:** near-black `--bg: #0b0b0c`, industrial red-orange `--accent: #ea4a2a`. Panels `--bg-2: #0f0f11`, `--panel: #141416`. Change `--accent` to re-theme everything.
-- **⚠️ CSS cache gotcha:** pages link `css/style.css` with **no cache-buster**. After CSS edits, **hard-refresh (Ctrl+Shift+R)** or a soft reload shows stale styles. (HTML is usually loaded with a `?v=` buster during testing.)
+- **✅ Cache-busting is now in place.** Every page links shared assets with a version query — `css/style.css?v=6`, `js/main.js?v=6`, `js/photos.js?v=6`. **After editing CSS or JS, bump the number on ALL html files** (one command below) so browsers load the new file without a hard-refresh. This replaced the old "must Ctrl+Shift+R" gotcha.
+  ```bash
+  # from project root — bump v=6 to v=7 everywhere
+  sed -i 's/?v=6"/?v=7"/g' *.html
+  ```
 
 ## Pages
 - `index.html` — hero + **Work grid** with a **multi-select discipline filter** (All / Robotics / Structures / Additive Mfg), per-card **metric chips**, and image-ready thumbnails.
-- `research.html` — **"Research & Certifications"**. Title now wraps **"RESEARCH &"** / **"CERTIFICATIONS"** (accent `&` on the Research line). Holds **certifications only** (5). Sidebar filter = All / Certifications; quick stat = 05 Certifications. **Awards were moved to About.**
-- `about.html` — bio / **Capabilities** (skills) / **Timeline**, plus an **"Awards & Honors"** section where **each award is its own `.award-box`** (5 awards). No valedictorian mention anywhere (removed — it also named the high school, which is off-limits).
-- Six project detail pages: `project-rose-arm.html`, `project-mini-bridge.html`, `project-steel-bridge.html`, `project-soma-pump.html`, `project-stair-robot.html`, `project-kealakehe.html` (FIRST Robotics).
+- `research.html` — **"Research & Certifications"** (5 certifications). Sidebar filter All / Certifications. Awards live in About.
+- `about.html` — bio / **Capabilities** / **Timeline** + an **"Awards & Honors"** section (each award its own `.award-box`, 5 awards).
+- Seven project detail pages: `project-uh88-weather.html`, `project-rose-arm.html`, `project-mini-bridge.html`, `project-steel-bridge.html`, `project-soma-pump.html`, `project-stair-robot.html`, `project-kealakehe.html` (FIRST Robotics).
 
 ## Project-page conventions
-- **Standardized specs:** every project's `.project-specs` has exactly **Role · Team · Process · Organization**, in that order. Specific metrics (load targets, placements, DOF, incline, etc.) live in the **overview prose**, not the spec table.
-- **Team sizes:** RoSE = "Multidisciplinary (mech · EE · CS)", Mini-Bridge = 4, Steel Bridge = 20, SoMa Pump = 5, Stair Robot = 6, FIRST = 30.
-- Most pages still use the plain numbered **`.steps` / `.step`** process list. **Only RoSE and Stair Robot** use the new picture-book pile (see below).
+- **Standardized specs:** every project's `.project-specs` has **Role · Team · Process · Organization** (UH-88 has an extended spec list). Specific metrics live in the overview prose, not the spec table.
+- **Team sizes:** RoSE = "Multidisciplinary (mech · EE · CS)", Mini-Bridge = 4, Steel Bridge = 20, SoMa Pump = 5, Stair Robot = 6, FIRST = 30, UH-88 = sole designer.
 
-## RoSE page (`project-rose-arm.html`) — the feature-rich template
-Order inside `.wrap`: cover → project-body (overview + specs) → **process pile** → **gallery** → **interactive model** → next-project.
-1. **Two-phase role:** overview + spec Role show **Contributor → Mechanical Lead** (year 1 → year 2).
-2. **Picture-book process = "polaroid" skin** (`.process-pile.process-pile--polaroid`). Cards are `position: sticky` and form a **growing pile**; `initProcessPile()` (main.js) JS-centres each card's sticky `top` on lock (so captions stay fully visible) and adds `.is-in` via IntersectionObserver. **Animation:** each polaroid **materialises a touch larger (scale 1.16) then shrinks to scale 1 and fades in**, keeping a per-card **random tilt** (`--tilt` custom prop). White polaroid frame, caption below.
-3. **Gallery = grid + lightbox** (`.gallery-grid`, `initGallery()`). Tiles are image-ready (`images/rose-arm-1.jpg`…`-6.jpg`); clicking any opens a fullscreen lightbox with prev/next/Esc. (An earlier "scatter/drop pile" gallery experiment was **reverted** back to the grid.)
-4. **Interactive 3D model** at the bottom (`.model-section`). Compact centred `<model-viewer>` (~480px). **Arrows (‹ ›) and ←/→ keys switch between preset camera views** (Iso/Front/Right/Back/Left/Top) via `initModelViewer()`; drag-to-orbit + scroll-zoom retained; auto-rotate is OFF. Model file: **`models/rose-arm.glb`** (see 3D notes).
+## ⭐ Process section — the "index" pile (ALL projects now use it)
+Every project's **"How it was made" → Process** section is now the SAME skin: `.process-section.process-pile.process-pile--index`. (The old white "polaroid" skin and the plain `.steps` list were both **retired** — the user chose the grey index card as the single style.)
 
-## Stair Robot page — the "index/blueprint" process skin
-`project-stair-robot.html` uses `.process-pile.process-pile--index`: same sticky pile mechanism, but **dark card, accent step number, image inset, drop-in with slight tilt** (translateY + rotate). Card bg was lightened to `#23232a` with a stronger border for separation. This exists so the user can **compare polaroid vs index** side by side.
+- **Look:** dark grey card `#23232a`, accent step number, image inset (`.card-media`, 4∶3), white uppercase title, dim description.
+- **Card markup (standard):**
+  ```html
+  <article class="pile-card" data-slot="process-1">
+    <div class="card-head"><span class="card-num">01</span><h4>Title</h4></div>
+    <div class="card-media"> <img …onerror→placeholder> <div class="media-ph">…</div> </div>
+    <p class="card-photo-cap" data-cap></p>   <!-- hidden except in #edit mode -->
+    <p>Step description.</p>
+  </article>
+  ```
+- **Behaviour:** `initProcessPile()` in `js/main.js`. All cards are `position: sticky`, pinned at the SAME `top` (JS-centred), stacked by z-index so each lands fully on top of the previous as you scroll. JS drives per-card `opacity`/`transform` (scale-down + fade-in) over a `DROP` window, plus a per-card random `--tilt`.
+- **Front-card logic (added this session):** `initProcessPile()` marks the top-most (last-landed) card with class **`.is-front`** and sets `pointer-events:auto` on it / `none` on the rest. This (a) routes clicks to the card you actually see and (b) hides the pager arrows/dots on cards stacked behind (see mini-bridge). Non-front control hiding is in CSS: `.pile-card:not(.is-front) .pager-arrow, …{ opacity:0; pointer-events:none }`.
+- **Photos:** driven by the label sheet `js/photos.js` via `data-slot="process-N"` (see Photo system). RoSE, UH-88, and Stair Robot already have `process-1…5` rows; Steel Bridge, SoMa Pump, and FIRST have the slots wired but **no photo rows yet** — add them to `js/photos.js` the same way.
 
-## 3D model pipeline (important)
-- Source was a 63 MB Onshape export. Compressed to **3.44 MB** with:
+### Per-page extras
+- **RoSE (`project-rose-arm.html`):** after the process pile → gallery → **interactive 3D model** (`<model-viewer>`, `models/rose-arm.glb`, camera-view arrows via `initModelViewer()`). Two-phase role "Contributor → Mechanical Lead".
+- **UH-88 (`project-uh88-weather.html`):** adds a **Key Constraints** list and a **Safety Features** grid around the process pile.
+
+## ⭐⭐ Mini-Bridge (`project-mini-bridge.html`) — the special per-step photo pager
+This is the only page whose process cards differ. Each of the 5 process cards is a **photo pager**: you page through multiple sub-photos, and the **whole card face slides** like a fresh polaroid.
+
+- **Structure per card** (no `data-slot` — the single-photo loader `initPhotos()` deliberately ignores these; the pager owns its own images):
+  ```html
+  <article class="pile-card">
+    <div class="card-pager" data-pager>
+      <div class="pager-viewport">           <!-- overflow:hidden -->
+        <div class="pager-track">            <!-- flex row, translateX slides it -->
+          <div class="pager-slide" data-file="mini-bridge-p1a.jpg">
+            <div class="card-head"><span class="card-num">1.0</span><h4>Rules &amp; Requirements</h4></div>
+            <div class="card-media"> <img src="images/…"onerror→ph> <div class="media-ph">…</div> </div>
+            <p class="card-desc" data-cap>Caption for this photo.</p>
+          </div>
+          … more .pager-slide …
+        </div>
+      </div>
+      <button class="pager-arrow pager-prev">‹</button>   <!-- OUTSIDE the card border -->
+      <button class="pager-arrow pager-next">›</button>
+      <div class="pager-dots"></div>                       <!-- built by JS -->
+    </div>
+  </article>
+  ```
+- **Each slide is a full "polaroid face":** its own heading (`card-head`), photo, and bottom caption (`card-desc`) all live inside the slide and slide together. Headings change per photo: `1.0 Rules & Requirements → 1.1 Extra Research`, `2.0 Team Coordination → 2.1 Weekly Syncs`, etc. (These sub-titles were authored as placeholders — edit them in the HTML.)
+- **Page-turn slide:** `.pager-track` is a flex row of 100%-wide slides; `initCardPagers()` sets `transform: translateX(-i*100%)` with a CSS transition. Both arrows + dot indicators, **wrapping** at both ends. A single-photo card auto-hides its arrows/dots.
+- **Arrows sit OUTSIDE the grey border:** absolutely positioned against `.pile-card` (`.card-pager` is `position:static`, `.pile-card` is the sticky/positioned ancestor). `left:-54px` / `right:-54px`; a `@media (max-width:640px)` query tucks them to `left/right:6px` so they don't overflow on mobile.
+- **JS:** `initCardPagers()` in `js/main.js` (wires each `[data-pager]`). Relies on the shared `.is-front` logic so only the visible card's arrows show and only it is clickable.
+- **Image slots (inline `src`, placeholder until the file exists):**
+  `mini-bridge-p1a/-p1b`, `-p2a/-p2b`, `-p3a/-p3b/-p3c`, `-p4a/-p4b`, `-p5a/-p5b/-p5c` (`.jpg`, in `images/`). Add/remove `.pager-slide` blocks to change photo count per step.
+- **Caption editing caveat:** the pager captions (`.card-desc[data-cap]`) are live-editable via `#edit` and persist in `localStorage`, but they are **inline in the HTML**, so the editor's "Copy label sheet" (which only regenerates `window.PHOTOS`) does NOT capture them. To change them permanently, edit `project-mini-bridge.html` directly. (If you want them managed like every other page, migrate them into `js/photos.js` and generalise `initPhotos()`.)
+
+## Photo system (`js/photos.js` + live caption editor)
+- **`window.PHOTOS`** is one row per photo: `{ file, project, step, caption }`. `step` is `cover`, `process-1…5`, or `gallery`. `initPhotos()` (main.js) filters by `<body data-project>` and drops each file into its slot; missing files fall back to an SVG placeholder via `onerror`.
+- **Project ids:** `uh88-weather · rose-arm · mini-bridge · steel-bridge · soma-pump · stair-robot · kealakehe`.
+- **Currently populated:** uh88-weather (process + gallery), rose-arm (process + gallery), stair-robot (process). Everything else has slots but no rows yet.
+- **Live editor:** open any project page with `#edit` (e.g. `project-rose-arm.html#edit`) → captions become editable, saved to `localStorage`. "Copy label sheet" hands you the full `js/photos.js` text to paste back for permanence. See `PHOTOS.md` for the user-facing how-to.
+
+## 3D model pipeline (RoSE only)
+- `models/rose-arm.glb` is committed (3.44 MB). Built with:
   `npx --yes @gltf-transform/cli optimize "<in>.glb" "models/rose-arm.glb" --compress draco --texture-compress webp`
-- **Must use `--compress draco`, NOT meshopt** — `@google/model-viewer@4.3.1` has no meshopt decoder and errors ("setMeshoptDecoder must be called…"). Draco decodes natively.
-- The optimizer also **simplifies** the mesh; that's what gets it to 3.44 MB. For crisper geometry, re-run **without** simplification (~8–10 MB, still fine).
-- `models/rose-arm.glb` **is committed** (real site asset).
-
-## Image slots (all optional — placeholders show until a file is dropped in)
-- Portrait: `images/portrait.jpg` (home hero).
-- Work-grid thumbs: `images/rose-arm.jpg`, `mini-bridge.jpg`, `steel-bridge.jpg`, `soma-pump.jpg`, `stair-robot.jpg`, `first-robotics.jpg`.
-- RoSE gallery: `images/rose-arm-1.jpg` … `rose-arm-6.jpg`.
-- RoSE process (polaroid): `images/rose-arm-p1.jpg` … `rose-arm-p5.jpg`.
-- Stair process (index): `images/stair-p1.jpg` … `stair-p5.jpg`.
-All use an `onerror` fallback to an SVG placeholder, so missing files never break layout.
-
-## Git state
-- **Committed** through `9d7ad21` "Add interactive 3D viewer, picture-book process, and content refinements" (on `personal-hero`).
-- **Uncommitted:** `css/style.css` only — the **polaroid scale-fade animation** rework (was a "rolling"/tilt pile, then a straight drop, now scale-down + fade-in + tilt). **Needs a commit** (suggested: "Polaroid process: scale-fade drop with tilt").
-- **Nothing has been pushed** this session — all commits are local. Confirm with the user before `git push`.
-- Commit trailer to use: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
-
-## Open decisions / TODO for next session
-1. **Commit** the uncommitted `css/style.css` polaroid animation.
-2. **Process skin choice:** user is comparing **polaroid (RoSE)** vs **index (Stair)**. Once they pick, roll the winner out to the other four project pages (they currently use the plain `.steps` list). Ask before doing all.
-3. **Optional polaroid polish:** user floated a "fade in / fade **out**" — currently only fade-in on land; could fade the previous card as the next drops on top. Not yet done.
-4. **Real media:** drop in the image slots above; the pages come alive once photos exist.
-5. **Push** to GitHub when the user is ready; consider **GitHub Pages** deploy for a live URL.
-6. Nice-to-haves (not started): résumé/CV PDF download button.
+- **Must use `--compress draco`, NOT meshopt** — model-viewer 4.x has no meshopt decoder. (The `Mesh is missing primitive index association` console warnings on the RoSE page come from this GLB and are harmless.)
 
 ## Key JS entry points (`js/main.js`, all called in the `DOMContentLoaded` boot block)
-`injectLayout` · `initScrollHeader` · `initDropdowns` · `initReveal` · `initFilters` (research) · `initWorkFilters` (home multi-select) · `initGallery` (lightbox) · `initModelViewer` (camera-view arrows) · `initProcessPile` (centres pile cards + triggers drop).
+`injectLayout` · `initScrollHeader` · `initDropdowns` · `initReveal` · `initFilters` (research) · `initWorkFilters` (home) · `initPhotos` · `initGallery` (lightbox) · `initModelViewer` (RoSE camera arrows) · `initProcessPile` (pile drop + `.is-front`/pointer-events) · **`initCardPagers`** (mini-bridge photo pager) · `initCaptionEditor`.
+
+## Git state
+- Committed base: `852b265` "Process pile: fade+scale each card in place…" on `personal-hero`.
+- **Uncommitted this session (NOT yet committed):**
+  - All 7 project pages → unified `process-pile--index` skin.
+  - `project-mini-bridge.html` → per-step photo pager (whole-card slide, sub-titles, arrows outside border).
+  - `js/main.js` → `initCardPagers()`, plus `.is-front`/pointer-events front-card logic in `initProcessPile()`.
+  - `css/style.css` → `.card-pager`/`.pager-*`/`.card-desc` styles + non-front control hiding.
+  - All `*.html` → `?v=6` cache-busters on shared assets.
+  - Suggested commit: "Unify process piles to grey index skin; add mini-bridge photo pager".
+- **Nothing pushed** this session — confirm with the user before `git push`.
+- Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+
+## Open decisions / TODO for next session
+1. **Commit** the uncommitted work above (and push when the user is ready; consider GitHub Pages for a live URL).
+2. **Real media:** drop files into the image slots — the pages come alive once photos exist. Add `js/photos.js` rows for Steel Bridge, SoMa Pump, FIRST; drop the `mini-bridge-p*` files for the bridge pager.
+3. **Mini-bridge sub-titles/captions** are placeholders — the user should review/rewrite the per-photo headings and descriptions.
+4. **Optional:** the pile shows the previous card faintly peeking behind the front one (normal stacked-pile look). User was offered a tighter stack offset / stronger fade of behind-cards — not done yet; revisit if they want it.
+5. **Optional:** migrate mini-bridge pager captions into `js/photos.js` so "Copy label sheet" captures them (see caveat above).
+6. Nice-to-have (not started): résumé/CV PDF download button.

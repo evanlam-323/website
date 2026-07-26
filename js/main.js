@@ -344,9 +344,13 @@ function initProcessPile() {
 
   const render = () => {
     const sy = window.scrollY || window.pageYOffset || 0;
+    let front = 0, frontP = -1;                       // the card the viewer perceives as "on top"
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
-      if (reduce) { card.style.opacity = 1; card.style.transform = `rotate(${tilts[i]})`; continue; }
+      if (reduce) {
+        card.style.opacity = 1; card.style.transform = `rotate(${tilts[i]})`; card.style.pointerEvents = 'auto';
+        front = i; continue;                          // last card sits on top of the static stack
+      }
       const approachTop = naturals[i] - sy;          // where the card would sit before sticky/transform
       let p = (pinTop + DROP - approachTop) / DROP;   // 0 = entering the drop zone, 1 = landed
       p = p < 0 ? 0 : p > 1 ? 1 : p;
@@ -354,6 +358,17 @@ function initProcessPile() {
       const ty = -(1 - p) * DROP;                     // hold the card on the pin instead of sliding up
       card.style.opacity = p;
       card.style.transform = `translateY(${ty.toFixed(1)}px) scale(${scale.toFixed(3)}) rotate(${tilts[i]})`;
+      // Front card = the last one to have (mostly) landed — the one the viewer
+      // sees on top. Its per-photo pager arrows/dots live OUTSIDE the card
+      // border, so we hide the ones on the cards stacked behind it (avoids
+      // ghosted duplicate arrows) and route all clicks to it.
+      if (p >= 0.5 || p >= frontP) { front = i; frontP = p; }
+    }
+    for (let i = 0; i < cards.length; i++) {
+      cards[i].classList.toggle('is-front', i === front);
+      // Only the front card receives clicks; the transparent/behind cards are
+      // still stacked on top of things and would otherwise swallow them.
+      if (!reduce) cards[i].style.pointerEvents = i === front ? 'auto' : 'none';
     }
   };
 
@@ -377,6 +392,54 @@ function initProcessPile() {
   window.addEventListener('resize', layout, { passive: true });
   window.addEventListener('load', layout);
   window.addEventListener('scroll', onScroll, { passive: true });
+}
+
+/* ---- Per-step photo pager (mini-bridge) ----
+   A process card can hold several sub-photos (1.1, 1.2, …). Left/right arrows
+   and the dots page between them; the strip slides horizontally like turning a
+   page, and wraps around at either end. Each slide already carries its own
+   [data-file] + [data-cap], so the live caption editor picks them up too. */
+function initCardPagers() {
+  const pagers = document.querySelectorAll('[data-pager]');
+  if (!pagers.length) return;
+
+  pagers.forEach(pager => {
+    const track = pager.querySelector('.pager-track');
+    const slides = [...pager.querySelectorAll('.pager-slide')];
+    const dotsWrap = pager.querySelector('.pager-dots');
+
+    // A single photo needs no controls — strip them out and leave the image.
+    if (slides.length <= 1) {
+      pager.querySelectorAll('.pager-arrow').forEach(el => el.remove());
+      if (dotsWrap) dotsWrap.remove();
+      return;
+    }
+
+    const prev = pager.querySelector('.pager-prev');
+    const next = pager.querySelector('.pager-next');
+    let i = 0;
+
+    const dots = slides.map((_, n) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pager-dot';
+      b.setAttribute('aria-label', `Photo ${n + 1}`);
+      b.addEventListener('click', () => go(n));
+      dotsWrap.appendChild(b);
+      return b;
+    });
+
+    const render = () => {
+      track.style.transform = `translateX(${-i * 100}%)`;
+      slides.forEach((s, n) => s.setAttribute('aria-hidden', n === i ? 'false' : 'true'));
+      dots.forEach((d, n) => d.classList.toggle('is-active', n === i));
+    };
+    const go = n => { i = (n + slides.length) % slides.length; render(); };
+
+    prev.addEventListener('click', () => go(i - 1));
+    next.addEventListener('click', () => go(i + 1));
+    render();
+  });
 }
 
 /* ---- Photo label sheet: place each photo from js/photos.js into its slot ----
@@ -594,5 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initGallery();
   initModelViewer();
   initProcessPile();
+  initCardPagers();
   initCaptionEditor();
 });

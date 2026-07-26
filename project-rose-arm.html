@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
   <!-- Interactive 3D model viewer (renders GLB/glTF in-browser) -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
@@ -50,51 +50,56 @@
         </aside>
       </section>
 
-      <section class="process-section process-pile process-pile--polaroid">
+      <section class="process-section process-pile process-pile--index">
         <p class="eyebrow">How it was made</p>
         <h2 class="process-head">Process</h2>
         <p class="pile-hint">Scroll — each step drops onto the pile.</p>
 
         <div class="pile">
           <article class="pile-card" data-slot="process-1">
+            <div class="card-head"><span class="card-num">01</span><h4>Requirements</h4></div>
             <div class="card-media">
               <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
               <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-1</span></div>
             </div>
             <p class="card-photo-cap" data-cap></p>
-            <div class="card-cap"><span class="card-num">01</span><div><h4>Requirements</h4><p>Turned the URC task list into reach, payload, and dexterity targets.</p></div></div>
+            <p>Turned the URC task list into reach, payload, and dexterity targets.</p>
           </article>
           <article class="pile-card" data-slot="process-2">
+            <div class="card-head"><span class="card-num">02</span><h4>Kinematic Design</h4></div>
             <div class="card-media">
               <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
               <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-2</span></div>
             </div>
             <p class="card-photo-cap" data-cap></p>
-            <div class="card-cap"><span class="card-num">02</span><div><h4>Kinematic Design</h4><p>Six axes laid out for full radial accessibility.</p></div></div>
+            <p>Six axes laid out for full radial accessibility.</p>
           </article>
           <article class="pile-card" data-slot="process-3">
+            <div class="card-head"><span class="card-num">03</span><h4>Differential-Drive Wrist</h4></div>
             <div class="card-media">
               <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
               <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-3</span></div>
             </div>
             <p class="card-photo-cap" data-cap></p>
-            <div class="card-cap"><span class="card-num">03</span><div><h4>Differential-Drive Wrist</h4><p>Pitch + roll combined into one compact, stiff joint.</p></div></div>
+            <p>Pitch + roll combined into one compact, stiff joint.</p>
           </article>
           <article class="pile-card" data-slot="process-4">
+            <div class="card-head"><span class="card-num">04</span><h4>Actuation</h4></div>
             <div class="card-media">
               <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
               <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-4</span></div>
             </div>
             <p class="card-photo-cap" data-cap></p>
-            <div class="card-cap"><span class="card-num">04</span><div><h4>Actuation</h4><p>3-phase motors balancing torque, resolution, and heat.</p></div></div>
+            <p>3-phase motors balancing torque, resolution, and heat.</p>
           </article>
           <article class="pile-card" data-slot="process-5">
+            <div class="card-head"><span class="card-num">05</span><h4>Competition</h4></div>
             <div class="card-media">
               <img alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
               <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>process-5</span></div>
             </div>
             <p class="card-photo-cap" data-cap></p>
-            <div class="card-cap"><span class="card-num">05</span><div><h4>Competition</h4><p>Built, tuned, competed — 24th of 114 at URC 2025.</p></div></div>
+            <p>Built, tuned, competed — 24th of 114 at URC 2025.</p>
           </article>
         </div>
       </section>
@@ -141,7 +146,7 @@
   </main>
 
   <div id="footer-mount"></div>
-  <script src="js/photos.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/photos.js?v=6"></script>
+  <script src="js/main.js?v=6"></script>
 </body>
 </html>
