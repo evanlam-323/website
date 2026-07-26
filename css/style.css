@@ -725,10 +725,14 @@ ul { list-style: none; }
 }
 .project-cover svg { width: 130px; opacity: .12; color: #fff; }
 .project-cover .tag {
-  position: absolute; top: 20px; left: 20px;
+  position: absolute; top: 20px; left: 20px; z-index: 2;
   font-family: var(--font-mono); font-size: .7rem; letter-spacing: .2em;
   color: var(--text-dim2); text-transform: uppercase;
 }
+.project-cover img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
+}
+.project-cover.is-empty img { display: none; }
 
 .project-body {
   display: grid; grid-template-columns: 1.5fr .8fr; gap: clamp(30px, 5vw, 70px);
@@ -795,24 +799,28 @@ ul { list-style: none; }
   width: min(100%, 480px);
   margin: 0 auto 30px;
   opacity: 0;
-  transform: translateY(-28px);
-  transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1);
+  transition: opacity .6s ease, transform .7s cubic-bezier(.2, .85, .25, 1);
   will-change: transform, opacity;
 }
-.pile-card.is-in { opacity: 1; }
-/* stack offsets (later cards sit slightly lower) + resting tilt */
-.pile-card:nth-child(1) { top: 118px; z-index: 1; }
-.pile-card:nth-child(2) { top: 130px; z-index: 2; }
-.pile-card:nth-child(3) { top: 142px; z-index: 3; }
-.pile-card:nth-child(4) { top: 154px; z-index: 4; }
-.pile-card:nth-child(5) { top: 166px; z-index: 5; }
-.pile-card:nth-child(1).is-in { transform: rotate(-3deg); }
-.pile-card:nth-child(2).is-in { transform: rotate(2.4deg); }
-.pile-card:nth-child(3).is-in { transform: rotate(-1.4deg); }
-.pile-card:nth-child(4).is-in { transform: rotate(2.8deg); }
-.pile-card:nth-child(5).is-in { transform: rotate(-2.2deg); }
+/* stack offsets + per-card random tilt (JS re-centres the tops on lock) */
+.pile-card:nth-child(1) { top: 118px; z-index: 1; --tilt: -3deg;   }
+.pile-card:nth-child(2) { top: 130px; z-index: 2; --tilt: 2.4deg;  }
+.pile-card:nth-child(3) { top: 142px; z-index: 3; --tilt: -1.4deg; }
+.pile-card:nth-child(4) { top: 154px; z-index: 4; --tilt: 2.8deg;  }
+.pile-card:nth-child(5) { top: 166px; z-index: 5; --tilt: -2.2deg; }
+
+/* polaroid: the card materialises on top of the previous one a touch larger,
+   then shrinks to size and fades in — the "dropped onto the pile" illusion */
+.process-pile--polaroid .pile-card { transform: scale(1.16) rotate(var(--tilt)); }
+.process-pile--polaroid .pile-card.is-in { opacity: 1; transform: scale(1) rotate(var(--tilt)); }
+
+/* index: keeps its drop-in with a slight tilt */
+.process-pile--index .pile-card { transform: translateY(-80px) rotate(var(--tilt)); }
+.process-pile--index .pile-card.is-in { opacity: 1; transform: translateY(0) rotate(var(--tilt)); }
+
 @media (prefers-reduced-motion: reduce) {
-  .pile-card { transition: opacity .3s ease; transform: none !important; }
+  .pile-card { transition: opacity .3s ease; transform: rotate(var(--tilt)) !important; }
+  .pile-card.is-in { opacity: 1; }
 }
 
 .card-media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--bg-2); }
@@ -947,6 +955,39 @@ ul { list-style: none; }
 .project-next .label { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .24em; text-transform: uppercase; color: var(--text-dim2); }
 .project-next a { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: clamp(1.4rem, 3vw, 2.2rem); color: #fff; transition: color .25s ease; }
 .project-next a:hover { color: var(--accent); }
+
+/* ===== key constraints ===== */
+.constraints-section { padding-top: clamp(50px, 7vw, 90px); }
+.constraint-list {
+  margin-top: 26px; list-style: none; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 clamp(20px, 3vw, 40px);
+}
+.constraint-list li {
+  border-top: 1px solid var(--line); padding: 20px 0;
+  color: var(--text-dim); font-size: .96rem; line-height: 1.5;
+}
+.constraint-list li span {
+  display: block; font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: 1.05rem; letter-spacing: .01em; color: #fff; margin-bottom: 8px;
+}
+.constraint-list li span::before {
+  content: ""; display: inline-block; width: 14px; height: 2px; background: var(--accent);
+  vertical-align: middle; margin-right: 10px;
+}
+
+/* ===== safety features ===== */
+.safety-section { padding-top: clamp(50px, 7vw, 90px); }
+.safety-grid {
+  margin-top: 26px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(16px, 2vw, 24px);
+}
+.safety-card { border: 1px solid var(--line); background: var(--panel); padding: 24px; transition: border-color .25s var(--ease); }
+.safety-card:hover { border-color: var(--accent); }
+.safety-card h4 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: 1.15rem; color: #fff; margin-bottom: 10px;
+}
+.safety-card p { color: var(--text-dim); font-size: .92rem; line-height: 1.55; }
 
 /* reveal on scroll */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s var(--ease), transform .7s var(--ease); }

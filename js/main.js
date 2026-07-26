@@ -20,6 +20,7 @@ const SITE = {
   ],
   // Individual project pages — shown in the Projects dropdown.
   projects: [
+    { label: 'UH 88″ Weather Sensor',   href: 'project-uh88-weather.html' },
     { label: '6 DOF Arm',               href: 'project-rose-arm.html' },
     { label: '3D-Printed Mini-Bridge',  href: 'project-mini-bridge.html' },
     { label: 'Steel Bridge',            href: 'project-steel-bridge.html' },

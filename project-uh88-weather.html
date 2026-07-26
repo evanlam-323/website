@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UH 88″ Deployable Weather Sensor — Evan Lam</title>
+  <meta name="description" content="A deployable weather-sensor mechanism for the UH 88-inch telescope on Maunakea — designed during the Akamai Program at the Institute for Astronomy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="project">
+
+  <div id="header-mount"></div>
+
+  <main class="section-dark grid-bg">
+    <div class="page-hero">
+      <a class="back-link" href="index.html#work">← Back to Work</a>
+      <p class="eyebrow">Institute for Astronomy · <span class="brand">Akamai</span> Program / Summer 2026</p>
+      <h1>UH 88″ Deployable Weather Sensor</h1>
+      <p>During the Akamai Internship at the Institute for Astronomy, I designed a deployable mechanism that extends a Boltwood Cloud Sensor out over the shutter of the UH 88-inch telescope on Maunakea — reading sky conditions in real time, then stowing clear so the dome can safely close.</p>
+    </div>
+
+    <div class="wrap">
+      <div class="project-cover">
+        <img src="images/uh88-weather-1.jpg" alt="Labeled CAD render of the deployable weather-sensor system"
+             onerror="this.closest('.project-cover').classList.add('is-empty'); this.remove();" />
+        <span class="tag">FIG. 01 — DEPLOYABLE SENSOR SYSTEM</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M12 2v6M12 22v-4M4.9 4.9l3 3M16.1 16.1l3 3M2 12h6M22 12h-4M4.9 19.1l3-3M16.1 7.9l3-3"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+
+      <section class="project-body">
+        <div class="project-overview">
+          <h2>Overview</h2>
+          <p>Maunakea is one of the harshest observing sites on Earth — 60+ mph winds, freezing rain, and heavy ice buildup. Telescopes rely on roof-mounted weather sensors to decide when to close, but the summit's previous cloud sensor was lost to those conditions, and a fixed sensor can foul the dome as it opens and closes.</p>
+          <p>My project solves that: a <strong>deployable sensor arm</strong> that drives a Boltwood Cloud Sensor II — plus an HQ camera — out past the telescope railings to take a clean reading, then retracts fully out of the shutter's path. It runs on two encoded <span class="brand">goBILDA</span> Viper linear rails on a rotating base, all carried on a rigid <strong>Unistrut</strong> frame that clears the existing rails and wiring.</p>
+          <p>Everything is driven by a Raspberry Pi 5 and a RoboClaw motor controller, with a web dashboard I built to jog the rails and read live weather from any phone or laptop on the network. I designed, machined, wired, and tested the full unit over a 6-week internship, culminating in a Critical Design Review.</p>
+        </div>
+
+        <aside class="project-specs">
+          <h3>Specifications</h3>
+          <dl>
+            <div class="spec-row"><dt>Role</dt><dd>Akamai Intern — sole designer</dd></div>
+            <div class="spec-row"><dt>Site</dt><dd>UH 88″ Telescope, Maunakea</dd></div>
+            <div class="spec-row"><dt>Actuation</dt><dd>2× goBILDA Viper rails · rotating base</dd></div>
+            <div class="spec-row"><dt>Controls</dt><dd>Raspberry Pi 5 · RoboClaw · web UI</dd></div>
+            <div class="spec-row"><dt>Rating</dt><dd>60 mph wind · rain &amp; ice</dd></div>
+            <div class="spec-row"><dt>Organization</dt><dd>Institute for Astronomy</dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="constraints-section">
+        <p class="eyebrow">Design envelope</p>
+        <h2 class="process-head">Key Constraints</h2>
+        <ul class="constraint-list">
+          <li><span>60 mph + rain</span>Must survive summit winds and freezing precipitation.</li>
+          <li><span>Low voltage only</span>No pneumatics, hydraulics, large springs, or counterweights.</li>
+          <li><span>No wireless</span>Light and radio emissions are prohibited near the instrument.</li>
+          <li><span>Fail-safe close</span>If the mechanism jams, the dome must still be able to close.</li>
+          <li><span>Zero interference</span>Nothing may contact the telescope — deployed or stowed.</li>
+          <li><span>Cloud sensor</span>Carry the Boltwood Cloud Sensor II as the primary payload.</li>
+        </ul>
+      </section>
+
+      <section class="process-section process-pile process-pile--polaroid">
+        <p class="eyebrow">How it was made</p>
+        <h2 class="process-head">Process</h2>
+        <p class="pile-hint">Scroll — each step drops onto the pile.</p>
+
+        <div class="pile">
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/uh88-weather-p1.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-p1.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">01</span><div><h4>The Problem</h4><p>Studied the existing roof sensors and summit conditions that destroyed the last cloud sensor.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/uh88-weather-p2.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-p2.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">02</span><div><h4>Design &amp; Trade Studies</h4><p>Ran decision matrices on scissor lifts vs. linear rails; landed on encoded goBILDA rails.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/uh88-weather-p3.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-p3.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">03</span><div><h4>Fabrication</h4><p>Cut and press-braked sheet aluminum, built the Unistrut frame, and assembled the rails.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/uh88-weather-p4.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-p4.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">04</span><div><h4>Electronics &amp; Controls</h4><p>Wired the Pi 5, RoboClaw, and DIN supplies; integrated encoders, limit switch, and Boltwood.</p></div></div>
+          </article>
+          <article class="pile-card">
+            <div class="card-media">
+              <img src="images/uh88-weather-p5.jpg" alt="" loading="lazy" onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+              <div class="media-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-p5.jpg</span></div>
+            </div>
+            <div class="card-cap"><span class="card-num">05</span><div><h4>Testing</h4><p>Built a web control panel, tuned PID and current limits, and characterized rail deflection.</p></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="safety-section">
+        <p class="eyebrow">Fail-safe design</p>
+        <h2 class="process-head">Safety Features</h2>
+        <div class="safety-grid">
+          <div class="safety-card"><h4>Shear Pin</h4><p>An M5 pin ties the rail housing to the frame — if the shutter strikes it, the pin snaps and the rails swing clear of the opening.</p></div>
+          <div class="safety-card"><h4>Current Limit</h4><p>The motor controller caps drive current so a jam can't overload the mechanism or the summit's low-voltage supply.</p></div>
+          <div class="safety-card"><h4>Limit Switch</h4><p>A homing switch establishes the zero point automatically and bounds travel at the retracted end.</p></div>
+          <div class="safety-card"><h4>Fuse</h4><p>An inline fuse protects the electronics stack against fault currents from the telescope's 120 V feed.</p></div>
+        </div>
+      </section>
+
+      <section class="gallery-section">
+        <p class="eyebrow">Gallery</p>
+        <h2 class="process-head">Renders &amp; Photos</h2>
+        <p class="gallery-hint">Click any tile to view it full-screen.</p>
+        <div class="gallery-grid">
+          <figure class="gallery-item" data-caption="Labeled system — CAD render" tabindex="0">
+            <img src="images/uh88-weather-1.jpg" alt="Labeled system — CAD render" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-1.jpg</span></div>
+            <figcaption>Labeled system — CAD render</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Deployable top assembly — CAD" tabindex="0">
+            <img src="images/uh88-weather-2.jpg" alt="Deployable top assembly — CAD" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-2.jpg</span></div>
+            <figcaption>Deployable top assembly — CAD</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="goBILDA linear rails — built" tabindex="0">
+            <img src="images/uh88-weather-3.jpg" alt="goBILDA linear rails — built" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-3.jpg</span></div>
+            <figcaption>goBILDA linear rails — built</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Full prototype — machine shop" tabindex="0">
+            <img src="images/uh88-weather-4.jpg" alt="Full prototype — machine shop" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-4.jpg</span></div>
+            <figcaption>Full prototype — machine shop</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Electronics wall &amp; power" tabindex="0">
+            <img src="images/uh88-weather-5.jpg" alt="Electronics wall and power" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-5.jpg</span></div>
+            <figcaption>Electronics wall &amp; power</figcaption>
+          </figure>
+          <figure class="gallery-item" data-caption="Web control + live weather dashboard" tabindex="0">
+            <img src="images/uh88-weather-6.jpg" alt="Web control and live weather dashboard" loading="lazy"
+                 onerror="this.closest('.gallery-item').classList.add('is-empty'); this.remove();" />
+            <div class="gallery-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>uh88-weather-6.jpg</span></div>
+            <figcaption>Web control + live weather dashboard</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <div class="project-next">
+        <span class="label">Next Project</span>
+        <a href="project-rose-arm.html">6 DOF Arm →</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="js/main.js"></script>
+</body>
+</html>
