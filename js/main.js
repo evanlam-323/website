@@ -318,10 +318,12 @@ function initModelViewer() {
 
 /* ---- Picture-book process: each card is "dropped" onto the pile ----
    All cards are sticky-pinned at the SAME spot, so a card fully lands on top of
-   the previous one — you never see the next card peeking as a preview. The drop
-   itself is driven by scroll position: as a card nears its landing spot it fades
-   in while shrinking from slightly-larger down to 1:1, so it reads as being
-   placed on top of the stack. */
+   the previous one — you never see the next card peeking as a preview. As a card
+   enters its "drop zone" it is held centred on the pin (a translate cancels the
+   scroll so it doesn't slide up) while it fades in and shrinks from slightly-
+   larger down to 1:1 — so it reads as being placed straight on top of the stack.
+   Progress is computed from each card's stable LAYOUT position (offsetTop chain),
+   not its live rect, so the transform we apply can't feed back on the maths. */
 function initProcessPile() {
   const pile = document.querySelector('.process-pile .pile');
   if (!pile) return;
@@ -333,19 +335,25 @@ function initProcessPile() {
   const tilts = cards.map(c =>
     (getComputedStyle(c).getPropertyValue('--tilt') || '0deg').trim() || '0deg');
 
+  // Document-flow top of an element, independent of sticky offset and transforms.
+  const docTop = el => { let y = 0; for (let n = el; n; n = n.offsetParent) y += n.offsetTop; return y; };
+
   let pinTop = 140;
+  let naturals = [];
   const DROP = 300; // px of scroll over which a card grows -> shrinks & fades in
 
   const render = () => {
+    const sy = window.scrollY || window.pageYOffset || 0;
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
       if (reduce) { card.style.opacity = 1; card.style.transform = `rotate(${tilts[i]})`; continue; }
-      const rectTop = card.getBoundingClientRect().top;
-      let p = (pinTop + DROP - rectTop) / DROP;   // 0 = approaching, 1 = landed
+      const approachTop = naturals[i] - sy;          // where the card would sit before sticky/transform
+      let p = (pinTop + DROP - approachTop) / DROP;   // 0 = entering the drop zone, 1 = landed
       p = p < 0 ? 0 : p > 1 ? 1 : p;
       const scale = 1.16 - 0.16 * p;
+      const ty = -(1 - p) * DROP;                     // hold the card on the pin instead of sliding up
       card.style.opacity = p;
-      card.style.transform = `scale(${scale.toFixed(3)}) rotate(${tilts[i]})`;
+      card.style.transform = `translateY(${ty.toFixed(1)}px) scale(${scale.toFixed(3)}) rotate(${tilts[i]})`;
     }
   };
 
@@ -354,6 +362,7 @@ function initProcessPile() {
     const tallest = Math.max(...cards.map(c => c.offsetHeight));
     pinTop = Math.max(headH + 20, Math.round((window.innerHeight - tallest) / 2));
     cards.forEach(c => { c.style.top = pinTop + 'px'; });
+    naturals = cards.map(docTop);
     render();
   };
 
