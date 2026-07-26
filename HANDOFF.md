@@ -15,11 +15,12 @@ Context for another chat/session to continue the work. Delete this file when don
 - **`.brand` CSS class** (`text-transform: none`) preserves mixed-case names like **RoSE** / **SoMa** inside otherwise-uppercased labels. Wrap just the brand word: `Team <span class="brand">RoSE</span>`.
 - **`.reveal`** = fade-in-on-scroll (IntersectionObserver in main.js).
 - **Theme:** near-black `--bg: #0b0b0c`, industrial red-orange `--accent: #ea4a2a`. Panels `--bg-2: #0f0f11`, `--panel: #141416`. Change `--accent` to re-theme everything.
-- **✅ Cache-busting is now in place.** Every page links shared assets with a version query — `css/style.css?v=6`, `js/main.js?v=6`, `js/photos.js?v=6`. **After editing CSS or JS, bump the number on ALL html files** (one command below) so browsers load the new file without a hard-refresh. This replaced the old "must Ctrl+Shift+R" gotcha.
+- **✅ Cache-busting is in place — currently `?v=8`.** Every page links shared assets with a version query — `css/style.css?v=8`, `js/main.js?v=8`, `js/photos.js?v=8`. **After editing CSS or JS you MUST bump the number on ALL html files** (one command below) so browsers load the new file.
   ```bash
-  # from project root — bump v=6 to v=7 everywhere
-  sed -i 's/?v=6"/?v=7"/g' *.html
+  # from project root — bump v=8 to v=9 everywhere
+  sed -i 's/?v=8/?v=9/g' *.html
   ```
+  ⚠️ **This bit us hard this session.** If you edit CSS/JS and DON'T bump the version, the browser keeps serving the cached old file at the identical URL and your change appears to "do nothing" — you can burn a lot of time thinking the code is wrong when it's just stale. Bump the version every time.
 
 ## Pages
 - `index.html` — hero + **Work grid** with a **multi-select discipline filter** (All / Robotics / Structures / Additive Mfg), per-card **metric chips**, and image-ready thumbnails.
@@ -53,14 +54,14 @@ Every project's **"How it was made" → Process** section is now the SAME skin: 
 - **UH-88 (`project-uh88-weather.html`):** adds a **Key Constraints** list and a **Safety Features** grid around the process pile.
 
 ## ⭐⭐ Mini-Bridge (`project-mini-bridge.html`) — the special per-step photo pager
-This is the only page whose process cards differ. Each of the 5 process cards is a **photo pager**: you page through multiple sub-photos, and the **whole card face slides** like a fresh polaroid.
+This is the only page whose process cards differ. Each of the 5 process cards is a **photo pager**: you page through multiple sub-photos, and the **whole polaroid sweeps sideways** to swap in the next one.
 
 - **Structure per card** (no `data-slot` — the single-photo loader `initPhotos()` deliberately ignores these; the pager owns its own images):
   ```html
   <article class="pile-card">
     <div class="card-pager" data-pager>
       <div class="pager-viewport">           <!-- overflow:hidden -->
-        <div class="pager-track">            <!-- flex row, translateX slides it -->
+        <div class="pager-track">            <!-- height animated by JS -->
           <div class="pager-slide" data-file="mini-bridge-p1a.jpg">
             <div class="card-head"><span class="card-num">1.0</span><h4>Rules &amp; Requirements</h4></div>
             <div class="card-media"> <img src="images/…"onerror→ph> <div class="media-ph">…</div> </div>
@@ -75,8 +76,12 @@ This is the only page whose process cards differ. Each of the 5 process cards is
     </div>
   </article>
   ```
-- **Each slide is a full "polaroid face":** its own heading (`card-head`), photo, and bottom caption (`card-desc`) all live inside the slide and slide together. Headings change per photo: `1.0 Rules & Requirements → 1.1 Extra Research`, `2.0 Team Coordination → 2.1 Weekly Syncs`, etc. (These sub-titles were authored as placeholders — edit them in the HTML.)
-- **Page-turn slide:** `.pager-track` is a flex row of 100%-wide slides; `initCardPagers()` sets `transform: translateX(-i*100%)` with a CSS transition. Both arrows + dot indicators, **wrapping** at both ends. A single-photo card auto-hides its arrows/dots.
+- **Each slide is a full "polaroid face":** its own heading (`card-head`), photo, and bottom caption (`card-desc`) all live inside the slide and move together. Headings change per photo: `1.0 Rules & Requirements → 1.1 Extra Research`, `2.0 Team Coordination → 2.1 Weekly Syncs`, etc. (These sub-titles were authored as placeholders — edit them in the HTML.)
+- **⭐ Swap animation (reworked this session — this is what the user cares about):** NOT a filmstrip anymore. `initCardPagers()` adds a `.js-pager` class that switches the slides to an **absolutely-stacked overlay** (`position:absolute; top/left/right:0`, opaque `#23232a` background). On a swap, the **incoming polaroid sweeps in from a full card-width off-frame**, scales down from `1.06 → 1` as it lands (the same "drop" feel as the scroll pile, but horizontal), and fades up on top (higher `z-index` + a `.is-sliding` drop-shadow). The **outgoing polaroid slides out the opposite way** (~0.62× width), shrinks to `0.94`, and fades beneath it. `next` enters from the right, `prev` from the left, dots infer direction from the jump; each lands at a **small random tilt**. `prefers-reduced-motion` → instant swap, no animation.
+  - **How the transition is triggered (important pattern):** set the start pose with `transition:none`, force a reflow (`void nxt.offsetWidth`), then re-enable transition and set the end pose — this animates reliably WITHOUT `requestAnimationFrame` (rAF is throttled when the tab isn't compositing, which broke an earlier attempt).
+  - **Height:** slides are absolute, so the track has no natural height — `sizeTo()` sets `track.style.height` to the visible slide's `offsetHeight` (animated via a CSS `height` transition) and recomputes on resize. Captions of different lengths therefore don't cause a jump.
+  - **Durations:** transform `.6s`, opacity `.4s` (CSS). `finish()` waits for the **transform** `transitionend` (ignores the earlier opacity one), with an `800ms` fallback timer; an `animating` flag blocks re-entrancy mid-swap.
+- **CSS lives in `css/style.css`** under "per-step photo pager": `.js-pager .pager-slide`, `.is-current`, `.is-sliding`, plus the arrows/dots. A single-photo card auto-hides its arrows/dots (handled in JS).
 - **Arrows sit OUTSIDE the grey border:** absolutely positioned against `.pile-card` (`.card-pager` is `position:static`, `.pile-card` is the sticky/positioned ancestor). `left:-54px` / `right:-54px`; a `@media (max-width:640px)` query tucks them to `left/right:6px` so they don't overflow on mobile.
 - **JS:** `initCardPagers()` in `js/main.js` (wires each `[data-pager]`). Relies on the shared `.is-front` logic so only the visible card's arrows show and only it is clickable.
 - **Image slots (inline `src`, placeholder until the file exists):**
@@ -98,16 +103,14 @@ This is the only page whose process cards differ. Each of the 5 process cards is
 `injectLayout` · `initScrollHeader` · `initDropdowns` · `initReveal` · `initFilters` (research) · `initWorkFilters` (home) · `initPhotos` · `initGallery` (lightbox) · `initModelViewer` (RoSE camera arrows) · `initProcessPile` (pile drop + `.is-front`/pointer-events) · **`initCardPagers`** (mini-bridge photo pager) · `initCaptionEditor`.
 
 ## Git state
-- Committed base: `852b265` "Process pile: fade+scale each card in place…" on `personal-hero`.
-- **Uncommitted this session (NOT yet committed):**
-  - All 7 project pages → unified `process-pile--index` skin.
-  - `project-mini-bridge.html` → per-step photo pager (whole-card slide, sub-titles, arrows outside border).
-  - `js/main.js` → `initCardPagers()`, plus `.is-front`/pointer-events front-card logic in `initProcessPile()`.
-  - `css/style.css` → `.card-pager`/`.pager-*`/`.card-desc` styles + non-front control hiding.
-  - All `*.html` → `?v=6` cache-busters on shared assets.
-  - Suggested commit: "Unify process piles to grey index skin; add mini-bridge photo pager".
-- **Nothing pushed** this session — confirm with the user before `git push`.
+- Prior base: `d8a4d78` "Unify process piles to grey index skin; add mini-bridge photo pager" on `personal-hero`.
+- **Committed this session — the mini-bridge pager animation rework:**
+  - `js/main.js` → `initCardPagers()` rewritten: filmstrip `translateX` → absolute-stacked **horizontal sweep** (off-frame slide-in + scale "drop" + fade + random tilt, outgoing slides out the other way). Adds `sizeTo()` height management, reflow-flush transition trigger, `.is-sliding` shadow, transform-`transitionend` finish + fallback, and an `animating` re-entrancy guard.
+  - `css/style.css` → per-step pager block rewritten for the overlay/crossfade: `.js-pager .pager-slide` (absolute, opaque `#23232a`), `.is-current`, `.is-sliding` shadow, animated track `height`, reduced-motion off-switch.
+  - All `*.html` → cache-busters bumped **`?v=6` → `?v=8`** (two bumps this session while iterating).
+- **Nothing pushed** yet — `personal-hero` is ahead of `origin/personal-hero`. Confirm with the user before `git push`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- Verified live at normal + slowed speed on `http://localhost:8137/project-mini-bridge.html`: the whole polaroid sweeps horizontally, settles at a random tilt, one `.is-current` slide, no stray state, no console errors.
 
 ## Open decisions / TODO for next session
 1. **Commit** the uncommitted work above (and push when the user is ready; consider GitHub Pages for a live URL).

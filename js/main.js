@@ -396,12 +396,19 @@ function initProcessPile() {
 
 /* ---- Per-step photo pager (mini-bridge) ----
    A process card can hold several sub-photos (1.1, 1.2, …). Left/right arrows
-   and the dots page between them; the strip slides horizontally like turning a
-   page, and wraps around at either end. Each slide already carries its own
-   [data-file] + [data-cap], so the live caption editor picks them up too. */
+   and the dots page between them. Rather than sliding a filmstrip, each swap
+   crossfades the whole polaroid: the outgoing card drifts LEFT and fades out
+   while the incoming one slides in from the RIGHT, lands on top, and settles at
+   a small RANDOM tilt. Slides are stacked absolutely (via the .js-pager class),
+   so they overlap mid-swap; the track height is animated to fit the visible
+   slide. Each slide carries its own [data-file] + [data-cap], so the live
+   caption editor still picks them up. */
 function initCardPagers() {
   const pagers = document.querySelectorAll('[data-pager]');
   if (!pagers.length) return;
+
+  const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rnd = (min, max) => Math.random() * (max - min) + min;
 
   pagers.forEach(pager => {
     const track = pager.querySelector('.pager-track');
@@ -418,27 +425,115 @@ function initCardPagers() {
     const prev = pager.querySelector('.pager-prev');
     const next = pager.querySelector('.pager-next');
     let i = 0;
+    let animating = false;
+
+    // Take over: stack the slides so they can overlap during the crossfade.
+    pager.classList.add('js-pager');
 
     const dots = slides.map((_, n) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'pager-dot';
       b.setAttribute('aria-label', `Photo ${n + 1}`);
-      b.addEventListener('click', () => go(n));
+      b.addEventListener('click', () => go(n, Math.sign(n - i)));
       dotsWrap.appendChild(b);
       return b;
     });
 
-    const render = () => {
-      track.style.transform = `translateX(${-i * 100}%)`;
-      slides.forEach((s, n) => s.setAttribute('aria-hidden', n === i ? 'false' : 'true'));
-      dots.forEach((d, n) => d.classList.toggle('is-active', n === i));
-    };
-    const go = n => { i = (n + slides.length) % slides.length; render(); };
+    // Match the viewport to whichever slide is showing (heights differ by caption).
+    const sizeTo = slide => { track.style.height = slide.offsetHeight + 'px'; };
 
-    prev.addEventListener('click', () => go(i - 1));
-    next.addEventListener('click', () => go(i + 1));
-    render();
+    // Rest the opening slide dead-centre; the tilt only kicks in on swaps.
+    slides.forEach((s, n) => {
+      s.classList.toggle('is-current', n === 0);
+      s.setAttribute('aria-hidden', n === 0 ? 'false' : 'true');
+      s.style.transform = 'translateX(0) rotate(0deg)';
+    });
+    dots.forEach((d, n) => d.classList.toggle('is-active', n === 0));
+    // Size once the images have a chance to lay out (and again on resize).
+    requestAnimationFrame(() => sizeTo(slides[0]));
+    window.addEventListener('resize', () => sizeTo(slides[i]));
+
+    const go = (n, dir) => {
+      n = (n + slides.length) % slides.length;
+      if (n === i || animating) return;
+      // Which way the new card slides in from. Arrows say so explicitly (prev
+      // enters from the left); dots infer it from the jump direction.
+      dir = dir || Math.sign(n - i) || 1;
+      const cur = slides[i];
+      const nxt = slides[n];
+
+      dots.forEach((d, k) => d.classList.toggle('is-active', k === n));
+      cur.setAttribute('aria-hidden', 'true');
+      nxt.setAttribute('aria-hidden', 'false');
+
+      if (REDUCE) {
+        cur.classList.remove('is-current');
+        nxt.classList.add('is-current');
+        nxt.style.transform = 'translateX(0) rotate(0deg)';
+        sizeTo(nxt);
+        i = n;
+        return;
+      }
+
+      animating = true;
+      // The incoming polaroid sweeps in from FULLY off-frame (one whole card
+      // width away) and lands with a small "drop" — scaling down from slightly
+      // larger, like the scroll presentation but horizontal. The outgoing card
+      // slides out the other way, shrinking and fading beneath it. Small random
+      // tilts keep each swap feeling hand-placed.
+      const w = (pager.querySelector('.pager-viewport').clientWidth || 360) + 40;
+      const enterX = (dir > 0 ? 1 : -1) * w;          // start a full card off-frame
+      const leaveX = (dir > 0 ? -1 : 1) * w * 0.62;    // exit well off the other side
+      const restTilt = rnd(-2.4, 2.4);       // where the new polaroid settles
+      const enterTilt = (dir > 0 ? 1 : -1) * rnd(3, 6);
+      const leaveTilt = (dir > 0 ? -1 : 1) * rnd(3, 6);
+      const pose = (x, tilt, scale) =>
+        `translateX(${x.toFixed(1)}px) rotate(${tilt.toFixed(2)}deg) scale(${scale})`;
+
+      // Drop the incoming card on top, pre-positioned off-frame and larger.
+      // Suppress its transition just for the setup so it doesn't animate INTO
+      // the start pose, then flush a reflow to commit that pose.
+      nxt.style.transition = 'none';
+      nxt.style.zIndex = '2';
+      cur.style.zIndex = '1';
+      cur.classList.add('is-sliding');
+      nxt.classList.add('is-current', 'is-sliding');
+      nxt.style.opacity = '0';
+      nxt.style.transform = pose(enterX, enterTilt, 1.06);
+      void nxt.offsetWidth;                  // flush the start state
+      sizeTo(nxt);                           // grow/shrink viewport to fit it
+
+      // Re-enable transitions and set the end pose — both cards now animate:
+      // the incoming one sweeps in and settles at 1:1; the outgoing one slides
+      // out, shrinks a touch, and fades.
+      nxt.style.transition = '';
+      nxt.style.opacity = '1';
+      nxt.style.transform = pose(0, restTilt, 1);
+      cur.style.opacity = '0';
+      cur.style.transform = pose(leaveX, leaveTilt, 0.94);
+
+      const finish = e => {
+        // Ignore the opacity transitionend (fires first); wait for the transform
+        // sweep to land — or the fallback timer, if the event never arrives.
+        if (e && e.propertyName !== 'transform') return;
+        nxt.removeEventListener('transitionend', finish);
+        clearTimeout(timer);
+        cur.classList.remove('is-current', 'is-sliding');
+        nxt.classList.remove('is-sliding');
+        cur.style.opacity = '';
+        cur.style.zIndex = '';
+        nxt.style.zIndex = '';
+        animating = false;
+      };
+      nxt.addEventListener('transitionend', finish);
+      const timer = setTimeout(finish, 800); // fallback if transitionend misses
+
+      i = n;
+    };
+
+    prev.addEventListener('click', () => go(i - 1, -1));
+    next.addEventListener('click', () => go(i + 1, 1));
   });
 }
 
