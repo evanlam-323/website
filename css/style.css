@@ -839,36 +839,58 @@ ul { list-style: none; }
 .process-pile--index .card-num { font-family: var(--font-display); font-weight: 900; color: var(--accent); font-size: 1.7rem; line-height: 1; }
 .process-pile--index .card-head h4 { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; color: #fff; font-size: 1.1rem; }
 .process-pile--index .pile-card > p { color: var(--text-dim); font-size: .9rem; line-height: 1.5; margin-top: 16px; }
+/* When a card hosts the photo pager, the grey "card" skin (border, fill, shadow)
+   moves ONTO each slide — see .js-pager .pager-slide — so the whole bordered
+   square sweeps in and out with its border. The outer container is then just a
+   transparent frame that still drops onto the pile on scroll. */
+.process-pile--index .pile-card:has(.card-pager) {
+  background: transparent; border: 0; padding: 0; box-shadow: none;
+}
 
-/* --- per-step photo pager (mini-bridge): the WHOLE polaroid crossfades ---
+/* --- per-step photo pager (mini-bridge): the WHOLE grey card sweeps ---
    Each slide carries its own heading, photo, and caption. Paging doesn't slide a
-   filmstrip — the outgoing polaroid drifts LEFT and fades out while the incoming
-   one slides in from the RIGHT and lands on top, at a small random tilt (see
-   initCardPagers). Slides are stacked (absolute) so they can overlap mid-swap;
-   the track's height is driven in JS to match the visible slide. Arrows sit
-   OUTSIDE the card border (positioned against the .pile-card ancestor). */
+   filmstrip — the outgoing grey card drifts off to one side and fades out while
+   the incoming one sweeps in from the arrow's side and settles upright, each at
+   its own small random tilt (see initCardPagers).
+   Sizing is CSS-driven, not JS-measured: the CURRENT slide stays in normal flow
+   so it gives the viewport its height, and every other slide is stacked
+   absolutely on top of it, hidden, ready to sweep in. (The old build measured
+   each slide and set the track height in JS; when that measurement didn't stick
+   the track collapsed to 0 and the cards rendered empty.)
+   Arrows sit OUTSIDE the card border (positioned against the .pile-card). */
 .card-pager { position: static; }
 .pager-viewport { position: relative; overflow: hidden; }
-.pager-track { position: relative; transition: height .5s var(--ease); }
+/* JS pager: let each tilted grey card sweep past (and rest askew of) the frame
+   without its border being clipped. body has overflow-x:hidden, so a card
+   sweeping off-frame never adds a page scrollbar. */
+.js-pager .pager-viewport { overflow: visible; }
+.pager-track { position: relative; }
 /* Fallback (no JS): slides just stack in normal flow, all readable. Once JS
    takes over it adds .js-pager and the slides become an overlapping stack. */
-.js-pager .pager-track { will-change: height; }
 .js-pager .pager-slide {
-  position: absolute; top: 0; left: 0; right: 0;
-  /* Opaque, matching the card, so the incoming polaroid fully covers the one it
-     slides over — no see-through crossfade, no card-behind bleeding through. */
+  position: absolute; top: 0; left: 0; width: 100%;
+  /* Each slide IS the grey card now: its own border, opaque fill, padding, and
+     shadow travel WITH it during the sweep, so the outline switches per photo
+     instead of the content paging inside one static frame. Opaque so the
+     incoming card fully covers the one it sweeps over. */
   background: #23232a;
-  opacity: 0; pointer-events: none;
-  transition: transform .6s var(--ease), opacity .4s var(--ease);
+  border: 1px solid rgba(255, 255, 255, .16);
+  padding: 20px;
+  box-shadow: 0 24px 46px rgba(0, 0, 0, .55);
+  opacity: 0; pointer-events: none; z-index: 1;
+  transition: transform .55s var(--ease), opacity .4s var(--ease);
   will-change: transform, opacity;
 }
-.js-pager .pager-slide.is-current { opacity: 1; pointer-events: auto; }
+/* The current slide flows normally (sizing the viewport) and sits on top. */
+.js-pager .pager-slide.is-current {
+  position: relative; opacity: 1; pointer-events: auto; z-index: 2;
+}
 /* While a swap is in flight, both cards lift with a shadow so the incoming one
-   reads as a distinct polaroid sweeping in ON TOP of the outgoing one. */
-.js-pager .pager-slide.is-sliding { box-shadow: 0 28px 60px rgba(0, 0, 0, .6); }
+   reads as a distinct card sweeping in ON TOP of the outgoing one. */
+.js-pager .pager-slide.is-swapping { box-shadow: 0 28px 60px rgba(0, 0, 0, .6); }
 .pager-slide { margin: 0; min-width: 0; }
 @media (prefers-reduced-motion: reduce) {
-  .pager-track, .js-pager .pager-slide { transition: none; }
+  .js-pager .pager-slide { transition: none; }
 }
 .card-desc { color: var(--text-dim); font-size: .9rem; line-height: 1.5; margin-top: 14px; }
 .pager-arrow {
@@ -887,6 +909,11 @@ ul { list-style: none; }
 .pager-arrow, .pager-dots { transition: opacity .2s ease; }
 .pile-card:not(.is-front) .pager-arrow,
 .pile-card:not(.is-front) .pager-dots { opacity: 0; pointer-events: none; }
+/* ...and its slides must not catch clicks either: a card still sitting in the
+   pile has a higher z-index, and its .is-current slide re-enables
+   pointer-events — without this it steals clicks aimed at the FRONT card's
+   arrows/dots (which sit over that stacked card's area). */
+.pile-card:not(.is-front) .pager-slide { pointer-events: none; }
 /* tight viewports: no room outside the card, so tuck the arrows back to its edges */
 @media (max-width: 640px) {
   .pager-prev { left: 6px; }

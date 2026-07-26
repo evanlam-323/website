@@ -395,14 +395,17 @@ function initProcessPile() {
 }
 
 /* ---- Per-step photo pager (mini-bridge) ----
-   A process card can hold several sub-photos (1.1, 1.2, …). Left/right arrows
+   A process card can hold several sub-photos (1.0, 1.1, …). Left/right arrows
    and the dots page between them. Rather than sliding a filmstrip, each swap
-   crossfades the whole polaroid: the outgoing card drifts LEFT and fades out
-   while the incoming one slides in from the RIGHT, lands on top, and settles at
-   a small RANDOM tilt. Slides are stacked absolutely (via the .js-pager class),
-   so they overlap mid-swap; the track height is animated to fit the visible
-   slide. Each slide carries its own [data-file] + [data-cap], so the live
-   caption editor still picks them up. */
+   sweeps the whole grey card: the outgoing card drifts off to one side and fades
+   out while the incoming one sweeps in from the arrow's side, lands on top, and
+   settles upright. Each card takes its OWN small random tilt during the sweep,
+   so every swap feels hand-placed.
+   Sizing is CSS-driven, not JS-measured: the current slide keeps `position:
+   relative` (see .js-pager .pager-slide.is-current) so it flows and gives the
+   viewport its height on its own — no offsetHeight reads that can fail to stick.
+   Each slide carries its own [data-file] + [data-cap], so the live caption
+   editor still picks them up. */
 function initCardPagers() {
   const pagers = document.querySelectorAll('[data-pager]');
   if (!pagers.length) return;
@@ -411,7 +414,6 @@ function initCardPagers() {
   const rnd = (min, max) => Math.random() * (max - min) + min;
 
   pagers.forEach(pager => {
-    const track = pager.querySelector('.pager-track');
     const slides = [...pager.querySelectorAll('.pager-slide')];
     const dotsWrap = pager.querySelector('.pager-dots');
 
@@ -427,7 +429,8 @@ function initCardPagers() {
     let i = 0;
     let animating = false;
 
-    // Take over: stack the slides so they can overlap during the crossfade.
+    // Take over: stack the slides so they can overlap during the sweep. Only the
+    // .is-current slide flows (and sizes the box); the rest sit absolutely on top.
     pager.classList.add('js-pager');
 
     const dots = slides.map((_, n) => {
@@ -440,25 +443,24 @@ function initCardPagers() {
       return b;
     });
 
-    // Match the viewport to whichever slide is showing (heights differ by caption).
-    const sizeTo = slide => { track.style.height = slide.offsetHeight + 'px'; };
-
-    // Rest the opening slide dead-centre; the tilt only kicks in on swaps.
+    // Each slide rests at its OWN small tilt, independent of the parent card's
+    // tilt, so the bordered grey square sits askew of the pile rather than
+    // aligned with it. (The viewport is overflow:visible so this tilt isn't
+    // clipped — see CSS.)
+    slides.forEach(s => { s._rest = rnd(-3.5, 3.5); });
+    // Open on the first slide, already at its resting tilt.
     slides.forEach((s, n) => {
       s.classList.toggle('is-current', n === 0);
       s.setAttribute('aria-hidden', n === 0 ? 'false' : 'true');
-      s.style.transform = 'translateX(0) rotate(0deg)';
+      if (n === 0) s.style.transform = `rotate(${s._rest.toFixed(2)}deg)`;
     });
     dots.forEach((d, n) => d.classList.toggle('is-active', n === 0));
-    // Size once the images have a chance to lay out (and again on resize).
-    requestAnimationFrame(() => sizeTo(slides[0]));
-    window.addEventListener('resize', () => sizeTo(slides[i]));
 
     const go = (n, dir) => {
       n = (n + slides.length) % slides.length;
       if (n === i || animating) return;
-      // Which way the new card slides in from. Arrows say so explicitly (prev
-      // enters from the left); dots infer it from the jump direction.
+      // Which way the new card sweeps in from. Arrows say so explicitly (next
+      // enters from the right); dots infer it from the jump direction.
       dir = dir || Math.sign(n - i) || 1;
       const cur = slides[i];
       const nxt = slides[n];
@@ -470,48 +472,43 @@ function initCardPagers() {
       if (REDUCE) {
         cur.classList.remove('is-current');
         nxt.classList.add('is-current');
-        nxt.style.transform = 'translateX(0) rotate(0deg)';
-        sizeTo(nxt);
+        cur.style.cssText = '';
+        nxt.style.cssText = '';
+        nxt.style.transform = `rotate(${nxt._rest.toFixed(2)}deg)`;
         i = n;
         return;
       }
 
       animating = true;
-      // The incoming polaroid sweeps in from FULLY off-frame (one whole card
-      // width away) and lands with a small "drop" — scaling down from slightly
-      // larger, like the scroll presentation but horizontal. The outgoing card
-      // slides out the other way, shrinking and fading beneath it. Small random
-      // tilts keep each swap feeling hand-placed.
-      const w = (pager.querySelector('.pager-viewport').clientWidth || 360) + 40;
-      const enterX = (dir > 0 ? 1 : -1) * w;          // start a full card off-frame
-      const leaveX = (dir > 0 ? -1 : 1) * w * 0.62;    // exit well off the other side
-      const restTilt = rnd(-2.4, 2.4);       // where the new polaroid settles
-      const enterTilt = (dir > 0 ? 1 : -1) * rnd(3, 6);
-      const leaveTilt = (dir > 0 ? -1 : 1) * rnd(3, 6);
-      const pose = (x, tilt, scale) =>
-        `translateX(${x.toFixed(1)}px) rotate(${tilt.toFixed(2)}deg) scale(${scale})`;
+      // The incoming card sweeps in from a full frame off (on the arrow's side)
+      // and settles upright; the outgoing card drifts off the other way and
+      // fades. Each card gets its own small random tilt during the sweep.
+      const enterX = dir > 0 ? 108 : -108;   // % of its own width, fully off-frame
+      const leaveX = dir > 0 ? -64 : 64;
+      const enterTilt = rnd(-5, 5);
+      const leaveTilt = rnd(-5, 5);
+      const pose = (x, tilt) => `translateX(${x}%) rotate(${tilt.toFixed(2)}deg)`;
 
-      // Drop the incoming card on top, pre-positioned off-frame and larger.
-      // Suppress its transition just for the setup so it doesn't animate INTO
-      // the start pose, then flush a reflow to commit that pose.
+      // Outgoing: drop out of flow (absolute) so the incoming slide, now current,
+      // sizes the viewport; then slide it off and fade it.
+      cur.classList.remove('is-current');
+      cur.classList.add('is-swapping');
+
+      // Incoming: becomes current, but pre-posed off-frame with transitions off,
+      // then a reflow flush so it animates FROM that pose instead of jumping.
+      nxt.classList.add('is-current', 'is-swapping');
       nxt.style.transition = 'none';
-      nxt.style.zIndex = '2';
-      cur.style.zIndex = '1';
-      cur.classList.add('is-sliding');
-      nxt.classList.add('is-current', 'is-sliding');
       nxt.style.opacity = '0';
-      nxt.style.transform = pose(enterX, enterTilt, 1.06);
-      void nxt.offsetWidth;                  // flush the start state
-      sizeTo(nxt);                           // grow/shrink viewport to fit it
-
-      // Re-enable transitions and set the end pose — both cards now animate:
-      // the incoming one sweeps in and settles at 1:1; the outgoing one slides
-      // out, shrinks a touch, and fades.
+      nxt.style.transform = pose(enterX, enterTilt);
+      void nxt.offsetWidth;                  // commit the start pose
       nxt.style.transition = '';
+
+      // End pose — both cards animate: incoming sweeps in and settles at its own
+      // resting tilt, outgoing slides off and fades.
       nxt.style.opacity = '1';
-      nxt.style.transform = pose(0, restTilt, 1);
+      nxt.style.transform = pose(0, nxt._rest);
       cur.style.opacity = '0';
-      cur.style.transform = pose(leaveX, leaveTilt, 0.94);
+      cur.style.transform = pose(leaveX, leaveTilt);
 
       const finish = e => {
         // Ignore the opacity transitionend (fires first); wait for the transform
@@ -519,15 +516,15 @@ function initCardPagers() {
         if (e && e.propertyName !== 'transform') return;
         nxt.removeEventListener('transitionend', finish);
         clearTimeout(timer);
-        cur.classList.remove('is-current', 'is-sliding');
-        nxt.classList.remove('is-sliding');
-        cur.style.opacity = '';
-        cur.style.zIndex = '';
-        nxt.style.zIndex = '';
+        cur.classList.remove('is-swapping');
+        nxt.classList.remove('is-swapping');
+        cur.style.cssText = '';            // back to hidden absolute default
+        nxt.style.cssText = '';            // clear the transition/opacity overrides
+        nxt.style.transform = `rotate(${nxt._rest.toFixed(2)}deg)`;  // hold rest tilt
         animating = false;
       };
       nxt.addEventListener('transitionend', finish);
-      const timer = setTimeout(finish, 800); // fallback if transitionend misses
+      const timer = setTimeout(finish, 850); // fallback if transitionend misses
 
       i = n;
     };
