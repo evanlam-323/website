@@ -575,21 +575,35 @@ function initPhotos() {
     }
   }
 
-  // -- Process steps (works for both the "pile" cards and the "steps" list) --
+  // -- Process steps --
+  //  0 photos  -> leave the placeholder (marked empty)
+  //  1 photo   -> drop it straight into the card's single .card-media
+  //  2+ photos -> rebuild the card as the mini-bridge photo pager (each photo
+  //               becomes its own grey card that sweeps in; arrows/dots page them)
   document.querySelectorAll('[data-slot^="process-"]').forEach(slot => {
-    const entry = find(slot.dataset.slot);
+    const stepRows = rows.filter(p => p.step === slot.dataset.slot);
     const img = slot.querySelector('img');
     const media = (img && img.closest('.card-media, .step-media')) || slot.querySelector('.card-media, .step-media') || slot;
     const cap = slot.querySelector('.card-photo-cap');
-    if (entry && img) {
-      slot.dataset.file = entry.file;
-      img.src = 'images/' + entry.file;
-      img.alt = captionFor(entry, overrides);
-      if (cap) cap.textContent = captionFor(entry, overrides);
-    } else {
+
+    if (stepRows.length === 0) {
       if (media && media.classList) media.classList.add('is-empty');
       if (img) img.remove();
+      return;
     }
+
+    if (stepRows.length === 1) {
+      const entry = stepRows[0];
+      slot.dataset.file = entry.file;
+      if (img) {
+        img.src = 'images/' + entry.file;
+        img.alt = captionFor(entry, overrides);
+      }
+      if (cap) cap.textContent = captionFor(entry, overrides);
+      return;
+    }
+
+    buildProcessPager(slot, stepRows, overrides);
   });
 
   // -- Gallery (built from every "gallery" row) --
@@ -624,6 +638,46 @@ function initPhotos() {
       grid.appendChild(fig);
     });
   }
+}
+
+/* Turn a single-photo process card into the mini-bridge photo pager so a step
+   can hold several photos. Each photo becomes its own grey card (keeping the
+   step's number, title and description) that sweeps in on arrow/dot paging.
+   initCardPagers() — which runs after this — wires up the sweep animation. */
+function buildProcessPager(slot, entries, overrides) {
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  const head = slot.querySelector('.card-head');
+  const headHTML = head ? head.outerHTML : '';
+  const num = (slot.querySelector('.card-num')?.textContent || slot.dataset.slot || '').trim();
+  // The step's written description is the plain <p> that isn't the photo caption.
+  const descEl = [...slot.querySelectorAll(':scope > p')].find(p => !p.classList.contains('card-photo-cap'));
+  const descHTML = descEl ? descEl.innerHTML : '';
+  const phSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>';
+
+  const slides = entries.map(entry => {
+    const cap = captionFor(entry, overrides);
+    return `
+      <div class="pager-slide" data-file="${esc(entry.file)}">
+        ${headHTML}
+        <div class="card-media">
+          <img alt="${esc(cap)}" loading="lazy" src="images/${esc(entry.file)}"
+               onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+          <div class="media-ph">${phSvg}<span>${esc(num)}</span></div>
+        </div>
+        <p class="card-photo-cap" data-cap>${esc(cap)}</p>
+        ${descHTML ? `<p class="card-desc">${descHTML}</p>` : ''}
+      </div>`;
+  }).join('');
+
+  slot.innerHTML = `
+    <div class="card-pager" data-pager>
+      <div class="pager-viewport"><div class="pager-track">${slides}</div></div>
+      <button class="pager-arrow pager-prev" type="button" aria-label="Previous photo">‹</button>
+      <button class="pager-arrow pager-next" type="button" aria-label="Next photo">›</button>
+      <div class="pager-dots"></div>
+    </div>`;
 }
 
 /* ---- Live caption editor ----

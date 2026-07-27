@@ -7,7 +7,7 @@ Context for another chat/session to continue the work. Delete this file when don
 - **Stack:** Plain HTML/CSS/JS, no build step. Google Fonts (Archivo / Inter / Space Mono). One 3rd-party runtime dep: Google `<model-viewer>` via CDN (only on the RoSE page).
 - **Repo:** https://github.com/evanlam-323/website
 - **Active branch:** `personal-hero`. `main` still has the old "featured project (MK-IV)" placeholder — leave it alone.
-- **Local preview:** `python -m http.server 8123` from the project root → `http://localhost:8123/index.html`. There is also a `.claude/launch.json` (name **`portfolio`**, port 8123) for the preview tooling. **`.claude/` is git-ignored**, so `launch.json` is local-only.
+- **Local preview:** `python -m http.server 8123` from the project root → `http://localhost:8123/index.html`. `.claude/launch.json` holds the preview configs (**`portfolio`** 8123, **`portfolio-alt`** 8137, plus this session's **`site-preview`** 8150 for the site and **`photo-organizer`** 8199 which serves the staging folder — the last one has an absolute path and can be deleted once photo work is done). **`.claude/` is git-ignored**, so `launch.json` is local-only.
 
 ## Architecture / conventions (read before editing)
 - **Shared header + footer are injected by JS**, not hard-coded per page. They live in the `SITE` object and `buildHeader()` / `buildFooter()` in `js/main.js`. Each page has `<div id="header-mount"></div>` and `<div id="footer-mount"></div>`. **Edit header/footer/nav/socials/project-dropdown in `js/main.js` only.**
@@ -47,14 +47,14 @@ Every project's **"How it was made" → Process** section is now the SAME skin: 
   ```
 - **Behaviour:** `initProcessPile()` in `js/main.js`. All cards are `position: sticky`, pinned at the SAME `top` (JS-centred), stacked by z-index so each lands fully on top of the previous as you scroll. JS drives per-card `opacity`/`transform` (scale-down + fade-in) over a `DROP` window, plus a per-card random `--tilt`.
 - **Front-card logic (added this session):** `initProcessPile()` marks the top-most (last-landed) card with class **`.is-front`** and sets `pointer-events:auto` on it / `none` on the rest. This (a) routes clicks to the card you actually see and (b) hides the pager arrows/dots on cards stacked behind (see mini-bridge). Non-front control hiding is in CSS: `.pile-card:not(.is-front) .pager-arrow, …{ opacity:0; pointer-events:none }`.
-- **Photos:** driven by the label sheet `js/photos.js` via `data-slot="process-N"` (see Photo system). RoSE, UH-88, and Stair Robot already have `process-1…5` rows; Steel Bridge, SoMa Pump, and FIRST have the slots wired but **no photo rows yet** — add them to `js/photos.js` the same way.
+- **Photos:** driven by the label sheet `js/photos.js` via `data-slot="process-N"` (see Photo system). As of this session **all seven projects have photo rows** (regenerated from the Photo Organizer); a `process-N` slot with 2+ rows auto-becomes the sweep pager. Note **mini-bridge has no `data-slot` process cards** (its process is the hand-authored pager) and **soma-pump only has `process-1…4`**.
 
 ### Per-page extras
 - **RoSE (`project-rose-arm.html`):** after the process pile → gallery → **interactive 3D model** (`<model-viewer>`, `models/rose-arm.glb`, camera-view arrows via `initModelViewer()`). Two-phase role "Contributor → Mechanical Lead".
 - **UH-88 (`project-uh88-weather.html`):** adds a **Key Constraints** list and a **Safety Features** grid around the process pile.
 
-## ⭐⭐ Mini-Bridge (`project-mini-bridge.html`) — the special per-step photo pager
-This is the only page whose process cards differ. Each of the 5 process cards is a **photo pager**: you page through multiple sub-photos, and the **whole polaroid sweeps sideways** to swap in the next one.
+## ⭐⭐ Per-step photo pager — Mini-Bridge (hand-authored) + auto-built elsewhere
+Each mini-bridge process card is a **photo pager**: you page through multiple sub-photos, and the **whole polaroid sweeps sideways** to swap in the next one. **As of this session the same pager is also built dynamically** on any other project whose `process-N` slot has 2+ photos — see `buildProcessPager()` in `js/main.js` (Photo system). The two differ only in origin: mini-bridge's slides are **hand-written in the HTML** (with per-photo sub-titles like `1.0 Rules → 1.1 Extra Research`); the auto-built ones reuse the step's existing head + description on every slide and get their images/captions from `js/photos.js`. Both are wired by the same `initCardPagers()`.
 
 - **Structure per card** (no `data-slot` — the single-photo loader `initPhotos()` deliberately ignores these; the pager owns its own images):
   ```html
@@ -89,10 +89,18 @@ This is the only page whose process cards differ. Each of the 5 process cards is
 - **Caption editing caveat:** the pager captions (`.card-desc[data-cap]`) are live-editable via `#edit` and persist in `localStorage`, but they are **inline in the HTML**, so the editor's "Copy label sheet" (which only regenerates `window.PHOTOS`) does NOT capture them. To change them permanently, edit `project-mini-bridge.html` directly. (If you want them managed like every other page, migrate them into `js/photos.js` and generalise `initPhotos()`.)
 
 ## Photo system (`js/photos.js` + live caption editor)
-- **`window.PHOTOS`** is one row per photo: `{ file, project, step, caption }`. `step` is `cover`, `process-1…5`, or `gallery`. `initPhotos()` (main.js) filters by `<body data-project>` and drops each file into its slot; missing files fall back to an SVG placeholder via `onerror`.
-- **Project ids:** `uh88-weather · rose-arm · mini-bridge · steel-bridge · soma-pump · stair-robot · kealakehe`.
-- **Currently populated:** uh88-weather (process + gallery), rose-arm (process + gallery), stair-robot (process). Everything else has slots but no rows yet.
+- **`window.PHOTOS`** is one row per photo: `{ file, project, step, caption }`. `step` is `cover`, `process-1…5`, `gallery`, or (personal only) `portrait`. `initPhotos()` (main.js) filters by `<body data-project>` and drops each file into its slot; missing files fall back to an SVG placeholder via `onerror`.
+- **Project ids:** `uh88-weather · rose-arm · mini-bridge · steel-bridge · soma-pump · stair-robot · kealakehe · personal`.
+- **⭐ Multi-photo process steps → auto-pager (added this session):** `initPhotos()` now gathers **all** rows for a `process-N` slot. **0** → placeholder, **1** → the card's single `.card-media` (old behaviour), **2+** → `buildProcessPager()` rebuilds the card as the mini-bridge sweep pager (see below), one photo per grey card. So the pager is **no longer mini-bridge-only** — any project can hold several photos in one process step just by adding more `process-N` rows.
+- **Currently populated (regenerated this session from the Photo Organizer):** all seven projects have process/gallery rows; see the table in `PHOTOS.md`/commit. `personal` has 5 `gallery` + 2 `portrait` rows **that have no render target yet** (see TODO). **No project has a `cover` row** — every project banner is currently empty.
+- **`personal` category:** organizer-only bucket with slots `portrait` (intended for the homepage hero `images/portrait.jpg`) and `gallery`. Nothing on the site reads `data-project="personal"` yet.
 - **Live editor:** open any project page with `#edit` (e.g. `project-rose-arm.html#edit`) → captions become editable, saved to `localStorage`. "Copy label sheet" hands you the full `js/photos.js` text to paste back for permanence. See `PHOTOS.md` for the user-facing how-to.
+
+## Photo Organizer tool (staging — outside the repo)
+- Lives in **`C:\Users\ninja\Downloads\photo-staging\`** (NOT in git). Built this session to place a ~2 GB Google-Drive photo drop.
+- `original/` = untouched HEIC/JPG; `web/` = converted+resized web JPGs (66 unique, dupes dropped); `thumbs/` = organizer thumbnails; `convert.py` / `build_organizer.py` regenerate them; `copy_to_site.py` copies `web/*.jpg` into the repo's `images/`.
+- **`organizer.html`** = a visual picker (double-click, or served via the `photo-organizer` launch config). Each photo gets a project + slot + caption dropdown; picks auto-save to `localStorage` (key `photoOrganizerV1`); "Copy photos.js" emits the label sheet. Slot menu is project-aware (mini-bridge = cover/gallery only; soma-pump = process-1..4; personal = portrait/gallery).
+- **67 videos** (.mov/.mp4) from the drop were **skipped** — still only inside the original zip in Downloads; they need compression + a player.
 
 ## 3D model pipeline (RoSE only)
 - `models/rose-arm.glb` is committed (3.44 MB). Built with:
@@ -108,14 +116,32 @@ This is the only page whose process cards differ. Each of the 5 process cards is
   - `js/main.js` → `initCardPagers()` rewritten: filmstrip `translateX` → absolute-stacked **horizontal sweep** (off-frame slide-in + scale "drop" + fade + random tilt, outgoing slides out the other way). Adds `sizeTo()` height management, reflow-flush transition trigger, `.is-sliding` shadow, transform-`transitionend` finish + fallback, and an `animating` re-entrancy guard.
   - `css/style.css` → per-step pager block rewritten for the overlay/crossfade: `.js-pager .pager-slide` (absolute, opaque `#23232a`), `.is-current`, `.is-sliding` shadow, animated track `height`, reduced-motion off-switch.
   - All `*.html` → cache-busters bumped **`?v=6` → `?v=8`** (two bumps this session while iterating).
+- **Uncommitted — this session's photo placement (2026-07-26):**
+  - `js/photos.js` → **regenerated** from the Photo Organizer: 66 real photos across all 7 projects + `personal`. All captions blank (user adds later). Replaced the old sample rows (the old `uh88-weather-*.jpg` / `rose-arm-p*.jpg` demo rows are gone).
+  - `js/main.js` → `initPhotos()` process block rewritten for 0/1/2+ photos; new **`buildProcessPager()`** builds the sweep pager for multi-photo steps.
+  - `images/` → **66 new web JPGs added** (converted from the Drive drop; originals live in `photo-staging/`). Old 12 sample images still present but mostly unreferenced now.
+  - `.claude/launch.json` → added `site-preview` + `photo-organizer` configs (local-only, git-ignored).
+  - Cache-busters **bumped `?v=8` → `?v=9`** across all `*.html` (this change touched `js/*`).
 - **Nothing pushed** yet — `personal-hero` is ahead of `origin/personal-hero`. Confirm with the user before `git push`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 - Verified live at normal + slowed speed on `http://localhost:8137/project-mini-bridge.html`: the whole polaroid sweeps horizontally, settles at a random tilt, one `.is-current` slide, no stray state, no console errors.
 
 ## Open decisions / TODO for next session
-1. **Commit** the uncommitted work above (and push when the user is ready; consider GitHub Pages for a live URL).
-2. **Real media:** drop files into the image slots — the pages come alive once photos exist. Add `js/photos.js` rows for Steel Bridge, SoMa Pump, FIRST; drop the `mini-bridge-p*` files for the bridge pager.
-3. **Mini-bridge sub-titles/captions** are placeholders — the user should review/rewrite the per-photo headings and descriptions.
-4. **Optional:** the pile shows the previous card faintly peeking behind the front one (normal stacked-pile look). User was offered a tighter stack offset / stronger fade of behind-cards — not done yet; revisit if they want it.
-5. **Optional:** migrate mini-bridge pager captions into `js/photos.js` so "Copy label sheet" captures them (see caveat above).
-6. Nice-to-have (not started): résumé/CV PDF download button.
+
+### ⭐ Requested feature — live on-page photo mover (gallery ↔ process)
+**The user explicitly wants this.** Today, re-slotting a photo (moving it between `gallery` and `process-N`, or between projects) is done in the **Photo Organizer** (`photo-staging/organizer.html`) → change the slot dropdown → "Copy photos.js" → paste. The ask is to do it **live on the project page itself**, without the organizer round-trip:
+- In an edit mode (extend the existing `#edit` mode in `initCaptionEditor()`), let the user **drag a gallery tile onto a process step (and vice-versa)**, or pick a new slot from a small menu on each photo.
+- Update `window.PHOTOS` in memory + `localStorage` immediately, re-run the placement so the page reflects it live (same as caption edits do now).
+- Extend the existing **"Copy label sheet"** so it serializes the moved `step`/`project` too (right now `buildLabelSheetText()` only re-emits captions — it already rewrites the whole `window.PHOTOS`, so it mostly works, but it reads `p.step`/`p.project` from the original rows, not from any in-browser move — that's the gap to close).
+- Watch the multi-photo → pager transition: moving a 2nd photo into a `process-N` slot should rebuild that card via `buildProcessPager()` on the live re-render.
+
+### Other items
+1. **Covers:** no project has a `cover` photo — every banner is empty. Pick one photo per project to promote to `cover` (organizer or a `photos.js` row).
+2. **Personal photos have no home:** 2 `portrait` + 5 `gallery` rows sit in `photos.js` but nothing renders `data-project="personal"`. Wire the homepage hero to a `personal`/`portrait` photo (currently hard-codes `images/portrait.jpg`) and/or add a personal gallery section.
+3. **Captions:** all photos placed this session have blank captions — the user will fill them via `#edit`.
+4. **Cache-busters** are at `?v=9` — bump again on the next CSS/JS edit.
+5. Consider **GitHub Pages** for a live URL (personal-hero is pushed but not deployed).
+6. **Mini-bridge:** its process still shows the hand-authored placeholder steps (`mini-bridge-p*.jpg`) — the user only assigned mini-bridge photos to the gallery. Review/rewrite those sub-titles/captions or migrate them into `js/photos.js`.
+7. **Videos** (67 skipped): compress + add a player if wanted.
+8. **Optional:** tighter pile stack offset / stronger fade of behind-cards (offered, not done).
+9. Nice-to-have (not started): résumé/CV PDF download button.
