@@ -218,9 +218,12 @@ function initWorkFilters() {
    Builds ONE overlay and reuses it. Tiles whose image hasn't been added yet
    show a placeholder; clicking still opens the lightbox (placeholder view) so
    the interaction can be tested before real photos exist. */
+/* The gallery grid is rebuilt on every (re)render, so the lightbox is created
+   ONCE and opens via a delegated click — no per-tile handlers to rebind. Tiles
+   can hold an image or a video; video tiles play with controls in the box. */
 function initGallery() {
-  const items = [...document.querySelectorAll('.gallery-item')];
-  if (!items.length) return;
+  if (!document.querySelector('[data-gallery], .gallery-item')) return;
+  if (document.querySelector('.lightbox')) return;   // already built
 
   const box = document.createElement('div');
   box.className = 'lightbox';
@@ -229,6 +232,7 @@ function initGallery() {
     <button class="lb-nav lb-prev" aria-label="Previous image">‹</button>
     <figure class="lb-stage">
       <img class="lb-img" alt="" hidden />
+      <video class="lb-video" controls playsinline hidden></video>
       <div class="lb-ph" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
         <span class="lb-ph-text">Image coming soon</span>
@@ -239,38 +243,62 @@ function initGallery() {
   document.body.appendChild(box);
 
   const lbImg = box.querySelector('.lb-img');
+  const lbVideo = box.querySelector('.lb-video');
   const lbPh = box.querySelector('.lb-ph');
   const lbPhText = box.querySelector('.lb-ph-text');
   const lbCap = box.querySelector('.lb-caption');
+  let items = [];
   let idx = 0;
+  const collect = () => { items = [...document.querySelectorAll('.gallery-item')]; };
 
   const render = () => {
     const item = items[idx];
-    const img = item.querySelector('img');
+    if (!item) return;
     const caption = item.dataset.caption || '';
     lbCap.textContent = caption;
-    // Guard against a broken/half-loaded image slipping into the lightbox.
+    lbVideo.pause();
+    if (item.dataset.video) {
+      lbVideo.src = 'images/' + item.dataset.file;
+      lbVideo.hidden = false; lbImg.hidden = true; lbPh.hidden = true;
+      lbVideo.currentTime = 0;
+      lbVideo.play().catch(() => {});
+      return;
+    }
+    lbVideo.removeAttribute('src');
+    const img = item.querySelector('img');
     const broken = img && img.complete && img.naturalWidth === 0;
     const hasImage = img && img.getAttribute('src') && !item.classList.contains('is-empty') && !broken;
     if (hasImage) {
       lbImg.src = img.currentSrc || img.src;
       lbImg.alt = caption;
-      lbImg.hidden = false; lbPh.hidden = true;
+      lbImg.hidden = false; lbVideo.hidden = true; lbPh.hidden = true;
     } else {
-      lbImg.hidden = true; lbPh.hidden = false;
+      lbImg.hidden = true; lbVideo.hidden = true; lbPh.hidden = false;
       lbPhText.textContent = caption || 'Image coming soon';
     }
   };
   const open = i => { idx = i; render(); box.classList.add('open'); document.body.style.overflow = 'hidden'; };
-  const close = () => { box.classList.remove('open'); document.body.style.overflow = ''; };
-  const go = d => { idx = (idx + d + items.length) % items.length; render(); };
+  const close = () => { box.classList.remove('open'); document.body.style.overflow = ''; lbVideo.pause(); };
+  const go = d => { if (!items.length) return; idx = (idx + d + items.length) % items.length; render(); };
 
-  items.forEach((item, i) => {
-    item.addEventListener('click', () => open(i));
-    item.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(i); }
-    });
+  // Delegated open: works for tiles built after this ran (re-renders included).
+  const tryOpen = target => {
+    const item = target.closest('.gallery-item');
+    if (!item) return;
+    // Don't hijack the editing controls that live on the tile.
+    if (target.closest('.photo-move-btn') || target.closest('[contenteditable="true"]')) return;
+    collect();
+    const i = items.indexOf(item);
+    if (i >= 0) open(i);
+  };
+  document.addEventListener('click', e => tryOpen(e.target));
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && document.activeElement &&
+        document.activeElement.classList && document.activeElement.classList.contains('gallery-item')) {
+      e.preventDefault(); tryOpen(document.activeElement);
+    }
   });
+
   box.querySelector('.lb-close').addEventListener('click', close);
   box.querySelector('.lb-prev').addEventListener('click', e => { e.stopPropagation(); go(-1); });
   box.querySelector('.lb-next').addEventListener('click', e => { e.stopPropagation(); go(1); });
@@ -414,6 +442,9 @@ function initCardPagers() {
   const rnd = (min, max) => Math.random() * (max - min) + min;
 
   pagers.forEach(pager => {
+    // Guard against re-wiring on a live re-render: only touch fresh pagers.
+    if (pager.dataset.wired) return;
+    pager.dataset.wired = '1';
     const slides = [...pager.querySelectorAll('.pager-slide')];
     const dotsWrap = pager.querySelector('.pager-dots');
 
@@ -543,6 +574,7 @@ function initCardPagers() {
    Captions come from the sheet but can be overridden live by the editor
    (stored per-file in localStorage) — see initCaptionEditor. */
 const CAPTION_KEY = 'photoCaptions';
+const MOVES_KEY   = 'photoMoves';
 
 function loadCaptionOverrides() {
   try { return JSON.parse(localStorage.getItem(CAPTION_KEY) || '{}'); }
@@ -553,56 +585,101 @@ function captionFor(entry, overrides) {
   return (o != null ? o : entry.caption) || '';
 }
 
+/* Live photo moves set by the on-page mover (#edit): { file: {project, step} }.
+   These override a row's slot without touching js/photos.js until you "Copy
+   label sheet". */
+function loadPhotoMoves() {
+  try { return JSON.parse(localStorage.getItem(MOVES_KEY) || '{}'); }
+  catch { return {}; }
+}
+function savePhotoMoves(moves) { localStorage.setItem(MOVES_KEY, JSON.stringify(moves)); }
+// Effective {project, step} for a raw PHOTOS row, applying any live move.
+function resolveRow(p, moves) {
+  const m = moves && moves[p.file];
+  return m ? { ...p, project: m.project, step: m.step } : p;
+}
+
+// A file whose name ends in a video extension renders as <video>, not <img>.
+const VIDEO_RE = /\.(mp4|webm|mov|m4v|ogv|ogg)$/i;
+const isVideoFile = f => VIDEO_RE.test(f || '');
+
+// Slots this mover can target (matches the Photo Organizer's slot menu).
+const MOVE_STEPS = ['cover', 'process-1', 'process-2', 'process-3', 'process-4', 'process-5', 'gallery', 'portrait'];
+const MOVE_PROJECTS = ['uh88-weather', 'rose-arm', 'mini-bridge', 'steel-bridge', 'soma-pump', 'stair-robot', 'kealakehe', 'personal'];
+
+/* Placement templates: process/cover slots get rebuilt destructively (single ->
+   pager, empty -> filled, filled -> empty), so we snapshot their pristine markup
+   once and restore from it on every (re)render. That makes renderPhotos()
+   idempotent — which the live mover relies on to re-place photos without a page
+   reload. */
+let PHOTO_TEMPLATES = null;
+function snapshotPhotoTemplates() {
+  PHOTO_TEMPLATES = { cover: null, process: new Map() };
+  const cover = document.querySelector('[data-photo-cover]');
+  if (cover) PHOTO_TEMPLATES.cover = cover.innerHTML;
+  document.querySelectorAll('[data-slot^="process-"]').forEach(slot => {
+    PHOTO_TEMPLATES.process.set(slot, slot.innerHTML);
+  });
+}
+
 function initPhotos() {
+  if (!document.body.dataset.project || !Array.isArray(window.PHOTOS)) return;
+  snapshotPhotoTemplates();
+  renderPhotos();
+}
+
+/* Re-runnable placement. Restores each slot from its template, then drops the
+   project's photos (or videos) into place. Safe to call again after a live edit
+   (see rerenderPhotos). */
+function renderPhotos() {
   const project = document.body.dataset.project;
   if (!project || !Array.isArray(window.PHOTOS)) return;
   const overrides = loadCaptionOverrides();
-  const rows = window.PHOTOS.filter(p => p.project === project);
+  const moves = loadPhotoMoves();
+  const rows = window.PHOTOS.map(p => resolveRow(p, moves)).filter(p => p.project === project);
   const find = step => rows.find(p => p.step === step);
 
   // -- Cover --
   const cover = document.querySelector('[data-photo-cover]');
   if (cover) {
+    if (PHOTO_TEMPLATES && PHOTO_TEMPLATES.cover != null) cover.innerHTML = PHOTO_TEMPLATES.cover;
+    cover.classList.remove('is-empty');
+    delete cover.dataset.file;
     const entry = find('cover');
-    const img = cover.querySelector('img');
-    if (entry && img) {
+    if (entry) {
       cover.dataset.file = entry.file;
-      img.src = 'images/' + entry.file;
-      img.alt = captionFor(entry, overrides);
+      setSlotMedia(cover, entry, overrides);
     } else {
       cover.classList.add('is-empty');
-      if (img) img.remove();
+      cover.querySelectorAll('img, video').forEach(el => el.remove());
     }
   }
 
   // -- Process steps --
   //  0 photos  -> leave the placeholder (marked empty)
   //  1 photo   -> drop it straight into the card's single .card-media
-  //  2+ photos -> rebuild the card as the mini-bridge photo pager (each photo
-  //               becomes its own grey card that sweeps in; arrows/dots page them)
+  //  2+ photos -> rebuild the card as the mini-bridge photo pager
   document.querySelectorAll('[data-slot^="process-"]').forEach(slot => {
+    if (PHOTO_TEMPLATES && PHOTO_TEMPLATES.process.has(slot)) {
+      slot.innerHTML = PHOTO_TEMPLATES.process.get(slot);
+      delete slot.dataset.file;
+    }
     const stepRows = rows.filter(p => p.step === slot.dataset.slot);
-    const img = slot.querySelector('img');
-    const media = (img && img.closest('.card-media, .step-media')) || slot.querySelector('.card-media, .step-media') || slot;
+    const media = slot.querySelector('.card-media, .step-media') || slot;
     const cap = slot.querySelector('.card-photo-cap');
 
     if (stepRows.length === 0) {
       if (media && media.classList) media.classList.add('is-empty');
-      if (img) img.remove();
+      slot.querySelectorAll('img, video').forEach(el => el.remove());
       return;
     }
-
     if (stepRows.length === 1) {
       const entry = stepRows[0];
       slot.dataset.file = entry.file;
-      if (img) {
-        img.src = 'images/' + entry.file;
-        img.alt = captionFor(entry, overrides);
-      }
+      setSlotMedia(media, entry, overrides);
       if (cap) cap.textContent = captionFor(entry, overrides);
       return;
     }
-
     buildProcessPager(slot, stepRows, overrides);
   });
 
@@ -614,34 +691,80 @@ function initPhotos() {
     if (!gal.length) {
       grid.innerHTML = `<p class="gallery-empty">No gallery photos yet — add rows with <code>step: "gallery"</code> in <code>js/photos.js</code>.</p>`;
     }
-    gal.forEach(entry => {
-      const cap = captionFor(entry, overrides);
-      const fig = document.createElement('figure');
-      fig.className = 'gallery-item';
-      fig.tabIndex = 0;
-      fig.dataset.caption = cap;
-      fig.dataset.file = entry.file;
-      const img = document.createElement('img');
-      img.src = 'images/' + entry.file;
-      img.alt = cap;
-      img.loading = 'lazy';
-      img.addEventListener('error', () => {
-        fig.classList.add('is-empty'); img.remove();
-      });
-      const ph = document.createElement('div');
-      ph.className = 'gallery-ph';
-      ph.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>${entry.file}</span>`;
-      const capEl = document.createElement('figcaption');
-      capEl.dataset.cap = '';
-      capEl.textContent = cap;
-      fig.append(img, ph, capEl);
-      grid.appendChild(fig);
-    });
+    gal.forEach(entry => grid.appendChild(buildGalleryItem(entry, overrides)));
   }
 }
 
+/* Drop the right media node (img OR video) into a .card-media / cover container,
+   replacing whatever media node the template left there. */
+function setSlotMedia(media, entry, overrides) {
+  const cap = captionFor(entry, overrides);
+  const markEmpty = () => { if (media && media.classList) media.classList.add('is-empty'); };
+  if (isVideoFile(entry.file)) {
+    media.querySelectorAll('img').forEach(el => el.remove());
+    let v = media.querySelector('video');
+    if (!v) { v = document.createElement('video'); media.insertBefore(v, media.firstChild); }
+    v.className = 'card-video';
+    v.src = 'images/' + entry.file;
+    v.muted = true; v.loop = true; v.controls = true; v.preload = 'metadata';
+    v.setAttribute('playsinline', '');
+    v.setAttribute('aria-label', cap);
+    v.onerror = () => { markEmpty(); v.remove(); };
+  } else {
+    media.querySelectorAll('video').forEach(el => el.remove());
+    let img = media.querySelector('img');
+    if (!img) { img = document.createElement('img'); img.loading = 'lazy'; media.insertBefore(img, media.firstChild); }
+    img.src = 'images/' + entry.file;
+    img.alt = cap;
+    img.onerror = () => { markEmpty(); img.remove(); };
+  }
+}
+
+const GALLERY_PH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>';
+
+/* One gallery tile — an <img>, or for a video file a muted first-frame <video>
+   with a ▶ badge (it plays with controls in the lightbox). */
+function buildGalleryItem(entry, overrides) {
+  const cap = captionFor(entry, overrides);
+  const fig = document.createElement('figure');
+  fig.className = 'gallery-item';
+  fig.tabIndex = 0;
+  fig.dataset.caption = cap;
+  fig.dataset.file = entry.file;
+
+  const ph = document.createElement('div');
+  ph.className = 'gallery-ph';
+  ph.innerHTML = `${GALLERY_PH_SVG}<span>${entry.file}</span>`;
+  const capEl = document.createElement('figcaption');
+  capEl.dataset.cap = '';
+  capEl.textContent = cap;
+
+  if (isVideoFile(entry.file)) {
+    fig.dataset.video = '1';
+    const v = document.createElement('video');
+    v.className = 'gallery-video';
+    v.src = 'images/' + entry.file + '#t=0.1';   // show the first frame as a poster
+    v.muted = true; v.preload = 'metadata';
+    v.setAttribute('playsinline', '');
+    v.addEventListener('error', () => { fig.classList.add('is-empty'); v.remove(); });
+    const badge = document.createElement('span');
+    badge.className = 'gallery-play';
+    badge.setAttribute('aria-hidden', 'true');
+    badge.textContent = '▶';
+    fig.append(v, badge, ph, capEl);
+  } else {
+    const img = document.createElement('img');
+    img.src = 'images/' + entry.file;
+    img.alt = cap;
+    img.loading = 'lazy';
+    img.addEventListener('error', () => { fig.classList.add('is-empty'); img.remove(); });
+    fig.append(img, ph, capEl);
+  }
+  return fig;
+}
+
 /* Turn a single-photo process card into the mini-bridge photo pager so a step
-   can hold several photos. Each photo becomes its own grey card (keeping the
+   can hold several photos/videos. Each becomes its own grey card (keeping the
    step's number, title and description) that sweeps in on arrow/dot paging.
    initCardPagers() — which runs after this — wires up the sweep animation. */
 function buildProcessPager(slot, entries, overrides) {
@@ -658,12 +781,17 @@ function buildProcessPager(slot, entries, overrides) {
 
   const slides = entries.map(entry => {
     const cap = captionFor(entry, overrides);
+    const mediaHTML = isVideoFile(entry.file)
+      ? `<video class="card-video" src="images/${esc(entry.file)}" muted loop controls playsinline preload="metadata"
+                aria-label="${esc(cap)}"
+                onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();"></video>`
+      : `<img alt="${esc(cap)}" loading="lazy" src="images/${esc(entry.file)}"
+               onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />`;
     return `
       <div class="pager-slide" data-file="${esc(entry.file)}">
         ${headHTML}
         <div class="card-media">
-          <img alt="${esc(cap)}" loading="lazy" src="images/${esc(entry.file)}"
-               onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />
+          ${mediaHTML}
           <div class="media-ph">${phSvg}<span>${esc(num)}</span></div>
         </div>
         <p class="card-photo-cap" data-cap>${esc(cap)}</p>
@@ -678,6 +806,15 @@ function buildProcessPager(slot, entries, overrides) {
       <button class="pager-arrow pager-next" type="button" aria-label="Next photo">›</button>
       <div class="pager-dots"></div>
     </div>`;
+}
+
+/* Re-run placement after a live move: re-place photos, wire any new pagers,
+   re-decorate for editing, and let the sticky pile re-measure card heights. */
+function rerenderPhotos() {
+  renderPhotos();
+  initCardPagers();
+  if (document.body.classList.contains('editing-captions')) decorateEditing();
+  window.dispatchEvent(new Event('resize'));
 }
 
 /* ---- Live caption editor ----
@@ -698,7 +835,7 @@ function initCaptionEditor() {
     if (document.body.classList.contains('editing-captions')) return;
     document.body.classList.add('editing-captions');
     buildCaptionToolbar();
-    wireEditableCaptions();
+    decorateEditing();
   };
 
   if (editingRequested()) enable();
@@ -706,8 +843,16 @@ function initCaptionEditor() {
   window.addEventListener('hashchange', () => { if (editingRequested()) enable(); });
 }
 
+// Wire (or re-wire, after a live re-render) the editing affordances on every
+// photo/video host: an editable caption + a "Move" button.
+function decorateEditing() {
+  wireEditableCaptions();
+  wireMovers();
+}
+
 function wireEditableCaptions() {
   document.querySelectorAll('[data-cap]').forEach(el => {
+    if (el.classList.contains('cap-editable')) return;   // idempotent
     el.setAttribute('contenteditable', 'true');
     el.setAttribute('spellcheck', 'true');
     el.classList.add('cap-editable');
@@ -734,30 +879,25 @@ function buildCaptionToolbar() {
   const bar = document.createElement('div');
   bar.className = 'cap-toolbar';
   bar.innerHTML = `
-    <span class="cap-badge">✎ Editing captions</span>
+    <span class="cap-badge">✎ Editing photos</span>
     <button type="button" data-act="copy">Copy label sheet</button>
     <button type="button" data-act="reset">Reset my edits</button>
     <button type="button" data-act="done">Done</button>`;
   document.body.appendChild(bar);
-
-  const toast = msg => {
-    let t = document.querySelector('.cap-toast');
-    if (!t) { t = document.createElement('div'); t.className = 'cap-toast'; document.body.appendChild(t); }
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
-  };
 
   bar.addEventListener('click', e => {
     const act = e.target.dataset.act;
     if (act === 'copy') {
       const text = buildLabelSheetText();
       navigator.clipboard.writeText(text).then(
-        () => toast('Copied — paste it over js/photos.js to save for good.'),
+        () => photoToast('Copied — paste it over js/photos.js to save for good.'),
         () => showCopyFallback(text)
       );
     } else if (act === 'reset') {
+      // Clear both caption edits and photo moves made in this browser.
       localStorage.removeItem(CAPTION_KEY);
-      toast('Your local caption edits were cleared. Reloading…');
+      localStorage.removeItem(MOVES_KEY);
+      photoToast('Your local edits were cleared. Reloading…');
       setTimeout(() => location.reload(), 700);
     } else if (act === 'done') {
       history.replaceState(null, '', location.pathname + location.search);
@@ -766,15 +906,109 @@ function buildCaptionToolbar() {
   });
 }
 
-// Regenerate the whole window.PHOTOS array with edited captions merged in.
+function photoToast(msg) {
+  let t = document.querySelector('.cap-toast');
+  if (!t) { t = document.createElement('div'); t.className = 'cap-toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// Regenerate the whole window.PHOTOS array with edited captions AND live moves
+// (new project/step) merged in.
 function buildLabelSheetText() {
   const overrides = loadCaptionOverrides();
+  const moves = loadPhotoMoves();
   const esc = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   const rows = window.PHOTOS.map(p => {
+    const r = resolveRow(p, moves);
     const caption = overrides[p.file] != null ? overrides[p.file] : p.caption;
-    return `  { file: "${esc(p.file)}", project: "${esc(p.project)}", step: "${esc(p.step)}", caption: "${esc(caption)}" },`;
+    return `  { file: "${esc(r.file)}", project: "${esc(r.project)}", step: "${esc(r.step)}", caption: "${esc(caption)}" },`;
   }).join('\n');
   return `window.PHOTOS = [\n${rows}\n];\n`;
+}
+
+/* ---- On-page photo mover ----
+   In edit mode each photo/video gets a "Move" button; it opens a small popover
+   to pick a new project + slot. Applying records the move (localStorage) and
+   re-places photos live — no organizer round-trip, no reload. */
+function wireMovers() {
+  const managed = new Set((window.PHOTOS || []).map(p => p.file));
+  document.querySelectorAll('[data-file]').forEach(host => {
+    // Only photos driven by js/photos.js can be moved. (Mini-bridge's pager
+    // slides are hand-authored inline and aren't in window.PHOTOS.)
+    if (!managed.has(host.dataset.file)) return;
+    // Key off the button actually being present: a slot's template is restored
+    // on re-render (wiping the button) while any dataset flag would persist.
+    if ([...host.children].some(c => c.classList && c.classList.contains('photo-move-btn'))) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'photo-move-btn';
+    btn.textContent = '⤢ Move';
+    btn.title = 'Move this photo to another project / slot';
+    btn.addEventListener('click', ev => { ev.stopPropagation(); ev.preventDefault(); openMoveMenu(host, btn); });
+    host.appendChild(btn);
+  });
+}
+
+function closeMoveMenu() {
+  const m = document.querySelector('.photo-move-menu');
+  if (m) m.remove();
+  document.removeEventListener('click', onMoveAway, true);
+}
+function onMoveAway(e) {
+  if (!e.target.closest('.photo-move-menu') && !e.target.closest('.photo-move-btn')) closeMoveMenu();
+}
+
+function openMoveMenu(host, anchor) {
+  closeMoveMenu();
+  const file = host.dataset.file;
+  const moves = loadPhotoMoves();
+  const raw = (window.PHOTOS || []).find(p => p.file === file) || { file };
+  const cur = resolveRow(raw, moves);
+
+  const pop = document.createElement('div');
+  pop.className = 'photo-move-menu';
+  pop.innerHTML = `
+    <div class="pm-title">Move <code>${file}</code></div>
+    <label class="pm-row"><span>Project</span>
+      <select data-pm="project">${MOVE_PROJECTS.map(p => `<option value="${p}"${p === cur.project ? ' selected' : ''}>${p}</option>`).join('')}</select></label>
+    <label class="pm-row"><span>Slot</span>
+      <select data-pm="step">${MOVE_STEPS.map(s => `<option value="${s}"${s === cur.step ? ' selected' : ''}>${s}</option>`).join('')}</select></label>
+    <div class="pm-actions">
+      <button type="button" data-pm-act="apply">Move here</button>
+      <button type="button" data-pm-act="cancel">Cancel</button>
+    </div>`;
+  document.body.appendChild(pop);
+
+  // Position under the button, kept on-screen.
+  const r = anchor.getBoundingClientRect();
+  const w = 260, h = 210;
+  pop.style.top = Math.max(8, Math.min(r.bottom + 8, window.innerHeight - h - 8)) + 'px';
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+
+  pop.querySelector('[data-pm-act="cancel"]').addEventListener('click', closeMoveMenu);
+  pop.querySelector('[data-pm-act="apply"]').addEventListener('click', () => {
+    const project = pop.querySelector('[data-pm="project"]').value;
+    const step = pop.querySelector('[data-pm="step"]').value;
+    closeMoveMenu();
+    applyMove(file, project, step);
+  });
+  // Defer so this same click doesn't immediately close the menu.
+  setTimeout(() => document.addEventListener('click', onMoveAway, true), 0);
+}
+
+function applyMove(file, project, step) {
+  const moves = loadPhotoMoves();
+  const raw = (window.PHOTOS || []).find(p => p.file === file);
+  // Back to its original slot? Drop the override instead of storing a no-op.
+  if (raw && raw.project === project && raw.step === step) delete moves[file];
+  else moves[file] = { project, step };
+  savePhotoMoves(moves);
+  rerenderPhotos();
+  const gone = project !== document.body.dataset.project;
+  photoToast(gone
+    ? `Moved to ${project} / ${step} — it now lives on that project's page.`
+    : `Moved to ${step}.`);
 }
 
 function showCopyFallback(text) {
