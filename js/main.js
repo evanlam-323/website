@@ -603,9 +603,59 @@ function resolveRow(p, moves) {
 const VIDEO_RE = /\.(mp4|webm|mov|m4v|ogv|ogg)$/i;
 const isVideoFile = f => VIDEO_RE.test(f || '');
 
-// Slots this mover can target (matches the Photo Organizer's slot menu).
-const MOVE_STEPS = ['cover', 'process-1', 'process-2', 'process-3', 'process-4', 'process-5', 'gallery', 'portrait'];
 const MOVE_PROJECTS = ['uh88-weather', 'rose-arm', 'mini-bridge', 'steel-bridge', 'soma-pump', 'stair-robot', 'kealakehe', 'personal'];
+// How many process-step cards each project page actually has. The mover only
+// offers slots that exist on the target page — moving a photo to a step the page
+// doesn't have would just make it disappear. Mini-bridge's process is authored
+// inline (no data-slot cards) so it takes no managed process photos.
+const PROCESS_STEP_COUNTS = {
+  'uh88-weather': 5, 'rose-arm': 5, 'mini-bridge': 0, 'steel-bridge': 5,
+  'soma-pump': 4, 'stair-robot': 5, 'kealakehe': 5, 'personal': 0,
+};
+
+/* A process step can hold several photos, shown as a mini-bridge-style pager
+   whose slides are numbered N.0, N.1, N.2… A photo's slot is therefore either a
+   plain step ("process-5", = position 0) or a sub-slot ("process-5.2"). These
+   two helpers split a step string into its base card and its sub-index. */
+const PROC_RE = /^process-(\d+)(?:\.(\d+))?$/;
+function baseStep(step) { const m = PROC_RE.exec(step || ''); return m ? ('process-' + m[1]) : step; }
+function stepIndex(step) { const m = PROC_RE.exec(step || ''); return (m && m[2] != null) ? parseInt(m[2], 10) : null; }
+function baseNumOf(step) { const m = PROC_RE.exec(step || ''); return m ? parseInt(m[1], 10) : null; }
+
+/* Empty photo slots the author reserved with the on-page "+" button (edit mode).
+   Stored as a per-project minimum slide count per step: { project: { "process-5": 3 } }.
+   Photos carry their own sub-index; this only keeps *empty* trailing slots alive
+   across re-renders so a photo can be moved into them. */
+const PROCSLOTS_KEY = 'processSlots';
+function loadProcSlots() {
+  try { return JSON.parse(localStorage.getItem(PROCSLOTS_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveProcSlots(o) { localStorage.setItem(PROCSLOTS_KEY, JSON.stringify(o)); }
+function reservedFor(project, base) { const o = loadProcSlots(); return (o[project] && o[project][base]) || 0; }
+function setReserved(project, base, n) {
+  const o = loadProcSlots();
+  o[project] = o[project] || {};
+  if (n > 0) o[project][base] = n; else delete o[project][base];
+  if (!Object.keys(o[project]).length) delete o[project];
+  saveProcSlots(o);
+}
+
+/* Turn a step's photos + reserved-empty count into an ordered array of slide
+   positions. Each entry is a photo row (filled slide) or null (empty slide).
+   Photos with an explicit sub-index land at that position; un-indexed ("bare")
+   photos fill the lowest free positions in order; the array is padded to the
+   reserved minimum so author-added empty slots stay put. */
+function layoutStepSlots(group, reserved) {
+  const explicit = [], bare = [];
+  group.forEach(r => { const idx = stepIndex(r.step); if (idx == null) bare.push(r); else explicit.push({ idx, r }); });
+  let count = reserved || 0;
+  explicit.forEach(e => { count = Math.max(count, e.idx + 1); });
+  const arr = new Array(count).fill(null);
+  explicit.forEach(e => { if (e.idx < arr.length) arr[e.idx] = e.r; });
+  bare.forEach(r => { const k = arr.indexOf(null); if (k === -1) arr.push(r); else arr[k] = r; });
+  return arr;
+}
 
 /* Placement templates: process/cover slots get rebuilt destructively (single ->
    pager, empty -> filled, filled -> empty), so we snapshot their pristine markup
@@ -656,31 +706,34 @@ function renderPhotos() {
   }
 
   // -- Process steps --
-  //  0 photos  -> leave the placeholder (marked empty)
-  //  1 photo   -> drop it straight into the card's single .card-media
-  //  2+ photos -> rebuild the card as the mini-bridge photo pager
+  //  A step gathers every photo whose slot's base card matches it (process-5,
+  //  process-5.0, process-5.2 …) plus any empty slots the author reserved.
+  //  0/1 slide -> single card (or empty placeholder); 2+ -> mini-bridge pager
+  //  with slides numbered N.0, N.1, N.2…
   document.querySelectorAll('[data-slot^="process-"]').forEach(slot => {
     if (PHOTO_TEMPLATES && PHOTO_TEMPLATES.process.has(slot)) {
       slot.innerHTML = PHOTO_TEMPLATES.process.get(slot);
       delete slot.dataset.file;
     }
-    const stepRows = rows.filter(p => p.step === slot.dataset.slot);
-    const media = slot.querySelector('.card-media, .step-media') || slot;
-    const cap = slot.querySelector('.card-photo-cap');
+    const base = slot.dataset.slot;
+    const group = rows.filter(p => baseStep(p.step) === base);
+    const arr = layoutStepSlots(group, reservedFor(project, base));
 
-    if (stepRows.length === 0) {
-      if (media && media.classList) media.classList.add('is-empty');
-      slot.querySelectorAll('img, video').forEach(el => el.remove());
+    if (arr.length <= 1) {
+      const media = slot.querySelector('.card-media, .step-media') || slot;
+      const cap = slot.querySelector('.card-photo-cap');
+      const entry = arr[0] || null;
+      if (!entry) {
+        if (media && media.classList) media.classList.add('is-empty');
+        slot.querySelectorAll('img, video').forEach(el => el.remove());
+      } else {
+        slot.dataset.file = entry.file;
+        setSlotMedia(media, entry, overrides);
+        if (cap) cap.textContent = captionFor(entry, overrides);
+      }
       return;
     }
-    if (stepRows.length === 1) {
-      const entry = stepRows[0];
-      slot.dataset.file = entry.file;
-      setSlotMedia(media, entry, overrides);
-      if (cap) cap.textContent = captionFor(entry, overrides);
-      return;
-    }
-    buildProcessPager(slot, stepRows, overrides);
+    buildProcessPager(slot, arr, overrides);
   });
 
   // -- Gallery (built from every "gallery" row) --
@@ -771,15 +824,32 @@ function buildProcessPager(slot, entries, overrides) {
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  const head = slot.querySelector('.card-head');
-  const headHTML = head ? head.outerHTML : '';
-  const num = (slot.querySelector('.card-num')?.textContent || slot.dataset.slot || '').trim();
+  // Reuse the step's heading title, but replace its number per slide with the
+  // sub-number N.i so each photo reads 5.0, 5.1, 5.2… (like mini-bridge).
+  const titleHTML = slot.querySelector('.card-head h4')?.outerHTML || '';
+  const cardNum = (slot.querySelector('.card-num')?.textContent || '').trim();
+  const baseNum = parseInt(cardNum.replace(/\D/g, ''), 10) || parseInt((slot.dataset.slot || '').replace('process-', ''), 10) || '';
+  const headFor = sub => `<div class="card-head"><span class="card-num">${esc(sub)}</span>${titleHTML}</div>`;
   // The step's written description is the plain <p> that isn't the photo caption.
   const descEl = [...slot.querySelectorAll(':scope > p')].find(p => !p.classList.contains('card-photo-cap'));
   const descHTML = descEl ? descEl.innerHTML : '';
   const phSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>';
 
-  const slides = entries.map(entry => {
+  const slides = entries.map((entry, i) => {
+    const sub = `${baseNum}.${i}`;
+    // Empty slot the author reserved with "+": a labelled placeholder, no photo.
+    // Fill it by opening another photo's Move and picking this sub-slot.
+    if (!entry) {
+      return `
+      <div class="pager-slide pager-slide--blank" data-blank data-sub="${esc(sub)}">
+        ${headFor(sub)}
+        <div class="card-media is-empty">
+          <div class="media-ph">${phSvg}<span>${esc(sub)} · empty</span></div>
+        </div>
+        <p class="pager-blank-hint">Empty slot <b>${esc(sub)}</b> — open any photo's <b>Move</b> and choose <code>${esc(sub)}</code> to drop it here.</p>
+        ${descHTML ? `<p class="card-desc">${descHTML}</p>` : ''}
+      </div>`;
+    }
     const cap = captionFor(entry, overrides);
     const mediaHTML = isVideoFile(entry.file)
       ? `<video class="card-video" src="images/${esc(entry.file)}" muted loop controls playsinline preload="metadata"
@@ -789,10 +859,10 @@ function buildProcessPager(slot, entries, overrides) {
                onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />`;
     return `
       <div class="pager-slide" data-file="${esc(entry.file)}">
-        ${headHTML}
+        ${headFor(sub)}
         <div class="card-media">
           ${mediaHTML}
-          <div class="media-ph">${phSvg}<span>${esc(num)}</span></div>
+          <div class="media-ph">${phSvg}<span>${esc(sub)}</span></div>
         </div>
         <p class="card-photo-cap" data-cap>${esc(cap)}</p>
         ${descHTML ? `<p class="card-desc">${descHTML}</p>` : ''}
@@ -844,10 +914,71 @@ function initCaptionEditor() {
 }
 
 // Wire (or re-wire, after a live re-render) the editing affordances on every
-// photo/video host: an editable caption + a "Move" button.
+// photo/video host: an editable caption, a "Move" button, and a per-step "+".
 function decorateEditing() {
   wireEditableCaptions();
   wireMovers();
+  wireStepAdders();
+}
+
+// Effective slide positions for a step (photos + reserved empties), used by the
+// per-step +/− buttons to know the current count and whether a blank is trailing.
+function stepLayout(project, base) {
+  const moves = loadPhotoMoves();
+  const group = window.PHOTOS.map(p => resolveRow(p, moves))
+    .filter(p => p.project === project && baseStep(p.step) === base);
+  return layoutStepSlots(group, reservedFor(project, base));
+}
+
+/* The per-step "+" (top-right of every process card, edit mode only): reserve
+   one more empty photo slot in this step. That flips a single-photo card into
+   the mini-bridge pager (arrows + dots) with a labelled empty slot you can then
+   fill by Move-ing a photo into that sub-slot. A "−" on the pager cards removes
+   an accidentally-added trailing empty slot again. */
+function wireStepAdders() {
+  const project = document.body.dataset.project;
+  document.querySelectorAll('[data-slot^="process-"]').forEach(slot => {
+    if (slot.querySelector(':scope > .step-add-btn')) return;   // idempotent per render
+    const base = slot.dataset.slot;
+
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'step-add-btn';
+    add.textContent = '+';
+    add.title = 'Add another photo slot to this step';
+    add.setAttribute('aria-label', 'Add another photo slot to this step');
+    add.addEventListener('click', ev => {
+      ev.stopPropagation(); ev.preventDefault();
+      setReserved(project, base, stepLayout(project, base).length + 1);
+      rerenderPhotos();
+      photoToast('Added an empty slot — open a photo’s Move and pick it to fill.');
+    });
+    slot.appendChild(add);
+
+    // "−" only on the horizontal (pager) cards, to undo an extra empty slot.
+    if (!slot.querySelector('.card-pager')) return;
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'step-del-btn';
+    del.textContent = '−';
+    del.title = 'Remove the empty slot from this step';
+    del.setAttribute('aria-label', 'Remove the empty slot from this step');
+    del.addEventListener('click', ev => {
+      ev.stopPropagation(); ev.preventDefault();
+      const arr = stepLayout(project, base);
+      if (!arr.length || arr[arr.length - 1] !== null) {
+        photoToast('No empty slot to remove — move a photo out of the last slot first.');
+        return;
+      }
+      setReserved(project, base, arr.length - 1);
+      // If no empty slots remain, drop the reservation entirely so the step
+      // collapses naturally when photos are later moved out.
+      if (!stepLayout(project, base).some(x => x === null)) setReserved(project, base, 0);
+      rerenderPhotos();
+      photoToast('Removed the empty slot.');
+    });
+    slot.appendChild(del);
+  });
 }
 
 function wireEditableCaptions() {
@@ -894,9 +1025,10 @@ function buildCaptionToolbar() {
         () => showCopyFallback(text)
       );
     } else if (act === 'reset') {
-      // Clear both caption edits and photo moves made in this browser.
+      // Clear caption edits, photo moves, and reserved empty slots.
       localStorage.removeItem(CAPTION_KEY);
       localStorage.removeItem(MOVES_KEY);
+      localStorage.removeItem(PROCSLOTS_KEY);
       photoToast('Your local edits were cleared. Reloading…');
       setTimeout(() => location.reload(), 700);
     } else if (act === 'done') {
@@ -959,6 +1091,62 @@ function onMoveAway(e) {
   if (!e.target.closest('.photo-move-menu') && !e.target.closest('.photo-move-btn')) closeMoveMenu();
 }
 
+const escHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const shortFile = f => (f && f.length > 24) ? (f.slice(0, 11) + '…' + f.slice(-9)) : (f || '');
+
+// The process steps a given project's page actually has — read live from the
+// DOM for the current page (so numbers + titles match what you see), or from the
+// static count map for other projects. Never offers a step the page lacks.
+function processStepsFor(project) {
+  if (project === document.body.dataset.project) {
+    // Number comes from data-slot (stable) — the visible .card-num may already
+    // be a rebuilt sub-number like "2.0" once the step is a pager.
+    return [...document.querySelectorAll('[data-slot^="process-"]')].map(s => ({
+      base: s.dataset.slot,
+      num: parseInt(s.dataset.slot.replace('process-', ''), 10),
+      title: (s.querySelector('.card-head h4')?.textContent || '').trim(),
+    }));
+  }
+  const n = PROCESS_STEP_COUNTS[project] || 0;
+  return Array.from({ length: n }, (_, k) => ({ base: `process-${k + 1}`, num: k + 1, title: '' }));
+}
+
+// Build the Slot <select> body for a project: cover, then each step broken into
+// its sub-slots (N.0, N.1 …) tagged occupied/empty, plus an "add new" position;
+// then gallery (and portrait for personal). curFile lets the current slot show
+// "this photo" and stay selected.
+function slotOptionsHTML(project, curStep, curFile) {
+  const moves = loadPhotoMoves();
+  const placed = (window.PHOTOS || []).map(p => resolveRow(p, moves)).filter(p => p.project === project);
+  const selAttr = v => v === curStep ? ' selected' : '';
+  let html = `<optgroup label="Cover"><option value="cover"${selAttr('cover')}>cover</option></optgroup>`;
+
+  processStepsFor(project).forEach(st => {
+    const group = placed.filter(p => baseStep(p.step) === st.base);
+    const arr = layoutStepSlots(group, reservedFor(project, st.base));
+    const count = Math.max(arr.length, 1);
+    const glabel = st.title ? `Step ${st.num} — ${st.title}` : `Step ${st.num}`;
+    let opts = '';
+    for (let k = 0; k < count; k++) {
+      const val = `${st.base}.${k}`;
+      const occ = arr[k];
+      const mine = occ && occ.file === curFile;
+      const tag = mine ? 'this photo' : occ ? ('occupied: ' + shortFile(occ.file)) : 'empty';
+      const isSel = val === curStep
+        || (mine && (curStep === st.base || stepIndex(curStep) === k));
+      opts += `<option value="${val}"${isSel ? ' selected' : ''}>${st.num}.${k} · ${escHtml(tag)}</option>`;
+    }
+    opts += `<option value="${st.base}.${count}">${st.num}.${count} · add new</option>`;
+    html += `<optgroup label="${escHtml(glabel)}">${opts}</optgroup>`;
+  });
+
+  html += `<optgroup label="Gallery"><option value="gallery"${selAttr('gallery')}>gallery</option></optgroup>`;
+  if (project === 'personal')
+    html += `<optgroup label="Personal"><option value="portrait"${selAttr('portrait')}>portrait</option></optgroup>`;
+  return html;
+}
+
 function openMoveMenu(host, anchor) {
   closeMoveMenu();
   const file = host.dataset.file;
@@ -969,11 +1157,11 @@ function openMoveMenu(host, anchor) {
   const pop = document.createElement('div');
   pop.className = 'photo-move-menu';
   pop.innerHTML = `
-    <div class="pm-title">Move <code>${file}</code></div>
+    <div class="pm-title">Move <code>${escHtml(file)}</code></div>
     <label class="pm-row"><span>Project</span>
       <select data-pm="project">${MOVE_PROJECTS.map(p => `<option value="${p}"${p === cur.project ? ' selected' : ''}>${p}</option>`).join('')}</select></label>
     <label class="pm-row"><span>Slot</span>
-      <select data-pm="step">${MOVE_STEPS.map(s => `<option value="${s}"${s === cur.step ? ' selected' : ''}>${s}</option>`).join('')}</select></label>
+      <select data-pm="step">${slotOptionsHTML(cur.project, cur.step, file)}</select></label>
     <div class="pm-actions">
       <button type="button" data-pm-act="apply">Move here</button>
       <button type="button" data-pm-act="cancel">Cancel</button>
@@ -982,9 +1170,15 @@ function openMoveMenu(host, anchor) {
 
   // Position under the button, kept on-screen.
   const r = anchor.getBoundingClientRect();
-  const w = 260, h = 210;
+  const w = 280, h = 210;
   pop.style.top = Math.max(8, Math.min(r.bottom + 8, window.innerHeight - h - 8)) + 'px';
   pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+
+  // Changing the project rebuilds the slot list from that project's real steps.
+  const stepSel = pop.querySelector('[data-pm="step"]');
+  pop.querySelector('[data-pm="project"]').addEventListener('change', e => {
+    stepSel.innerHTML = slotOptionsHTML(e.target.value, null, file);
+  });
 
   pop.querySelector('[data-pm-act="cancel"]').addEventListener('click', closeMoveMenu);
   pop.querySelector('[data-pm-act="apply"]').addEventListener('click', () => {
@@ -1005,10 +1199,13 @@ function applyMove(file, project, step) {
   else moves[file] = { project, step };
   savePhotoMoves(moves);
   rerenderPhotos();
+  // Pretty label: "process-5.2" -> "step 5.2", others stay as-is.
+  const m = PROC_RE.exec(step);
+  const pretty = m ? ('step ' + m[1] + (m[2] != null ? '.' + m[2] : '')) : step;
   const gone = project !== document.body.dataset.project;
   photoToast(gone
-    ? `Moved to ${project} / ${step} — it now lives on that project's page.`
-    : `Moved to ${step}.`);
+    ? `Moved to ${project} / ${pretty} — it now lives on that project's page.`
+    : `Moved to ${pretty}.`);
 }
 
 function showCopyFallback(text) {

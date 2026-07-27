@@ -19,14 +19,17 @@ You never edit HTML to add, move, or re-caption a photo.
      `uh88-weather · rose-arm · mini-bridge · steel-bridge · soma-pump · stair-robot · kealakehe`
    - **step** — where it lands on that page:
      - `cover` — the big banner image (one per project)
-     - `process-1` … `process-5` — the numbered **Process** steps
+     - `process-1` … `process-5` — the numbered **Process** steps. To put a photo at a
+       specific position in a step's pager, add a sub-index: `process-5.0`, `process-5.1`,
+       `process-5.2` … (shown on the card as 5.0, 5.1, 5.2). A plain `process-5` counts as
+       the first position.
      - `gallery` — a tile in the photo gallery (add as many `gallery` rows as you want)
    - **caption** — the text shown with the photo
 
 That's it. Reload the page and the photo is in place.
 
-> **Two or more photos in the same `process-N` step** automatically become a swipeable
-> photo pager (arrows + dots) on that card.
+> **Two or more photos in the same process step** automatically become a swipeable
+> photo pager (arrows + dots), numbered `N.0`, `N.1`, `N.2` …
 
 ## Videos work too
 
@@ -86,13 +89,24 @@ Buttons in the edit toolbar:
 
 Also in **`#edit`** mode, every photo/video shows a small **⤢ Move** button. Click it to:
 
-- send the photo to a different **slot** (e.g. `gallery` → `process-3`, or promote one to `cover`), or
+- send the photo to a different **slot**. The slot list now matches the real steps on the
+  target project — each step is broken into its exact photo positions (`5.0`, `5.1`, `5.2` …,
+  labelled *occupied* / *empty*, plus an *add new* position), so you pick precisely where it
+  lands. Projects only list the steps they actually have (so a photo can't vanish into a step
+  that doesn't exist).
 - send it to a different **project** entirely (it then appears on that project's page).
 
-The page re-places everything **instantly** — no reload. Moving a second photo into a
-`process-N` step turns that card into the swipe pager on the spot. Moves are saved in your
-browser and, like captions, are baked into the file when you hit **Copy label sheet** and
-paste it back over `js/photos.js`.
+**Adding photo slots — the `+` / `−` buttons.** Every process card shows a small **`+`** badge in
+its top-right corner (edit mode only). Click it to add an **empty slot** to that step; the
+card turns into the swipe pager (arrows + dots) with a labelled empty slide (e.g. `5.2`). Then
+open any photo's **Move** and choose that sub-slot to drop it in. On the pager cards a **`−`**
+badge sits just left of the `+` — click it to remove an empty slot you added by accident (it
+only removes a *trailing empty* slot; move a photo out first if the last slot is filled).
+
+The page re-places everything **instantly** — no reload. Moves are saved in your browser and,
+like captions, are baked into the file when you hit **Copy label sheet** and paste it back
+over `js/photos.js`. (Empty slots you added with `+` are scaffolding — they only persist once
+a photo is moved into them.)
 
 ## Notes
 

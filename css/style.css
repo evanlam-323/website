@@ -1184,6 +1184,42 @@ ul { list-style: none; }
 .editing-captions .photo-move-btn { display: inline-block; }
 .pile-card:not(.is-front) .photo-move-btn { opacity: 0; pointer-events: none; }
 
+/* Per-step "+" (edit mode): a round badge just outside the card's top-right
+   corner. Adds an empty photo slot to this step, turning it into the pager. */
+.step-add-btn {
+  position: absolute; top: -13px; right: -13px; z-index: 7;
+  width: 28px; height: 28px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; line-height: 1;
+  font-family: var(--font-mono); font-size: 1.05rem; color: #fff;
+  background: rgba(11,11,12,.9); border: 1px solid var(--accent); cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+.step-add-btn:hover { background: var(--accent); transform: scale(1.08); }
+.pile-card:not(.is-front) .step-add-btn { opacity: 0; pointer-events: none; }
+
+/* "−" sits just left of the "+" on pager cards — removes an extra empty slot. */
+.step-del-btn {
+  position: absolute; top: -13px; right: 24px; z-index: 7;
+  width: 28px; height: 28px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; line-height: 1;
+  font-family: var(--font-mono); font-size: 1.05rem; color: #fff;
+  background: rgba(11,11,12,.9); border: 1px solid var(--line); cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .15s ease;
+}
+.step-del-btn:hover { background: #b8371d; border-color: #b8371d; transform: scale(1.08); }
+.pile-card:not(.is-front) .step-del-btn { opacity: 0; pointer-events: none; }
+
+/* Reserved-but-empty pager slide: a labelled placeholder awaiting a photo. */
+.pager-slide--blank .card-media { display: grid; place-items: center; }
+.pager-blank-hint {
+  margin-top: 14px; color: var(--text-dim); font-size: .82rem; line-height: 1.45;
+}
+.pager-blank-hint b { color: #fff; }
+.pager-blank-hint code {
+  font-family: var(--font-mono); font-size: .82em; color: var(--accent);
+  background: rgba(234,74,42,.12); padding: 1px 5px; border-radius: 4px;
+}
+
 .photo-move-menu {
   position: fixed; z-index: 300; width: 244px;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
