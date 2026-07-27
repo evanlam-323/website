@@ -258,7 +258,7 @@ function initGallery() {
     lbCap.textContent = caption;
     lbVideo.pause();
     if (item.dataset.video) {
-      lbVideo.src = 'images/' + item.dataset.file;
+      lbVideo.src = (item.dataset.dir ? item.dataset.dir.replace(/\/+$/, '') + '/' : 'images/') + item.dataset.file;
       lbVideo.hidden = false; lbImg.hidden = true; lbPh.hidden = true;
       lbVideo.currentTime = 0;
       lbVideo.play().catch(() => {});
@@ -603,6 +603,10 @@ function resolveRow(p, moves) {
 const VIDEO_RE = /\.(mp4|webm|mov|m4v|ogv|ogg)$/i;
 const isVideoFile = f => VIDEO_RE.test(f || '');
 
+// Media lives in images/ by default; rows injected from a videos/<project>/ folder
+// (see initVideoFolder) carry a `dir`, so their src resolves there instead.
+const mediaSrc = entry => (entry && entry.dir ? String(entry.dir).replace(/\/+$/, '') + '/' : 'images/') + entry.file;
+
 const MOVE_PROJECTS = ['uh88-weather', 'rose-arm', 'mini-bridge', 'steel-bridge', 'soma-pump', 'stair-robot', 'kealakehe', 'personal'];
 // How many process-step cards each project page actually has. The mover only
 // offers slots that exist on the target page — moving a photo to a step the page
@@ -758,7 +762,7 @@ function setSlotMedia(media, entry, overrides) {
     let v = media.querySelector('video');
     if (!v) { v = document.createElement('video'); media.insertBefore(v, media.firstChild); }
     v.className = 'card-video';
-    v.src = 'images/' + entry.file;
+    v.src = mediaSrc(entry);
     v.muted = true; v.loop = true; v.controls = true; v.preload = 'metadata';
     v.setAttribute('playsinline', '');
     v.setAttribute('aria-label', cap);
@@ -767,7 +771,7 @@ function setSlotMedia(media, entry, overrides) {
     media.querySelectorAll('video').forEach(el => el.remove());
     let img = media.querySelector('img');
     if (!img) { img = document.createElement('img'); img.loading = 'lazy'; media.insertBefore(img, media.firstChild); }
-    img.src = 'images/' + entry.file;
+    img.src = mediaSrc(entry);
     img.alt = cap;
     img.onerror = () => { markEmpty(); img.remove(); };
   }
@@ -784,6 +788,7 @@ function buildGalleryItem(entry, overrides) {
   fig.tabIndex = 0;
   fig.dataset.caption = cap;
   fig.dataset.file = entry.file;
+  if (entry.dir) fig.dataset.dir = entry.dir;
 
   const ph = document.createElement('div');
   ph.className = 'gallery-ph';
@@ -796,7 +801,7 @@ function buildGalleryItem(entry, overrides) {
     fig.dataset.video = '1';
     const v = document.createElement('video');
     v.className = 'gallery-video';
-    v.src = 'images/' + entry.file + '#t=0.1';   // show the first frame as a poster
+    v.src = mediaSrc(entry) + '#t=0.1';   // show the first frame as a poster
     v.muted = true; v.preload = 'metadata';
     v.setAttribute('playsinline', '');
     v.addEventListener('error', () => { fig.classList.add('is-empty'); v.remove(); });
@@ -807,7 +812,7 @@ function buildGalleryItem(entry, overrides) {
     fig.append(v, badge, ph, capEl);
   } else {
     const img = document.createElement('img');
-    img.src = 'images/' + entry.file;
+    img.src = mediaSrc(entry);
     img.alt = cap;
     img.loading = 'lazy';
     img.addEventListener('error', () => { fig.classList.add('is-empty'); img.remove(); });
@@ -852,10 +857,10 @@ function buildProcessPager(slot, entries, overrides) {
     }
     const cap = captionFor(entry, overrides);
     const mediaHTML = isVideoFile(entry.file)
-      ? `<video class="card-video" src="images/${esc(entry.file)}" muted loop controls playsinline preload="metadata"
+      ? `<video class="card-video" src="${esc(mediaSrc(entry))}" muted loop controls playsinline preload="metadata"
                 aria-label="${esc(cap)}"
                 onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();"></video>`
-      : `<img alt="${esc(cap)}" loading="lazy" src="images/${esc(entry.file)}"
+      : `<img alt="${esc(cap)}" loading="lazy" src="${esc(mediaSrc(entry))}"
                onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />`;
     return `
       <div class="pager-slide" data-file="${esc(entry.file)}">
@@ -1054,7 +1059,8 @@ function buildLabelSheetText() {
   const rows = window.PHOTOS.map(p => {
     const r = resolveRow(p, moves);
     const caption = overrides[p.file] != null ? overrides[p.file] : p.caption;
-    return `  { file: "${esc(r.file)}", project: "${esc(r.project)}", step: "${esc(r.step)}", caption: "${esc(caption)}" },`;
+    const dir = p.dir ? `, dir: "${esc(p.dir)}"` : '';
+    return `  { file: "${esc(r.file)}", project: "${esc(r.project)}", step: "${esc(r.step)}", caption: "${esc(caption)}"${dir} },`;
   }).join('\n');
   return `window.PHOTOS = [\n${rows}\n];\n`;
 }
@@ -1222,6 +1228,42 @@ function showCopyFallback(text) {
   wrap.querySelector('textarea').select();
 }
 
+/* ---- Auto-pull videos dropped into videos/<project>/ ----
+   The site can't rely on the browser writing files, so trimmed clips are just
+   downloaded and dragged into videos/<project-id>/. On a project page this fetches
+   that folder's directory listing (the local python http.server provides one) and
+   injects any video it finds as a gallery row — so it renders, and is movable /
+   re-captionable in #edit like any other photo. On a static host with no directory
+   listing this simply no-ops; bake the rows via "Copy label sheet" for deploy. */
+async function initVideoFolder() {
+  const project = document.body.dataset.project;
+  if (!project || !Array.isArray(window.PHOTOS)) return;
+  const dir = 'videos/' + project;
+  let html;
+  try {
+    const res = await fetch(dir + '/', { cache: 'no-store' });
+    if (!res.ok) return;
+    html = await res.text();
+  } catch { return; }
+  const found = [];
+  const re = /href="([^"?#]+)"/gi;
+  let m;
+  while ((m = re.exec(html))) {
+    let f = m[1];
+    if (f.startsWith('/') || f.includes('/')) continue;   // skip parent link + subdirs
+    f = decodeURIComponent(f);
+    if (VIDEO_RE.test(f)) found.push(f);
+  }
+  found.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  let added = 0;
+  found.forEach(f => {
+    if (window.PHOTOS.some(p => p.file === f)) return;     // already a managed row
+    window.PHOTOS.push({ file: f, project, step: 'gallery', caption: '', dir });
+    added++;
+  });
+  if (added && typeof rerenderPhotos === 'function') rerenderPhotos();
+}
+
 /* ---- boot ---- */
 document.addEventListener('DOMContentLoaded', () => {
   injectLayout();
@@ -1236,4 +1278,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initProcessPile();
   initCardPagers();
   initCaptionEditor();
+  initVideoFolder();
 });

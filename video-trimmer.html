@@ -94,14 +94,26 @@
   <header>
     <div class="eyebrow">Author tool · not part of the public site</div>
     <h1>Video Trimmer</h1>
-    <p class="muted">Pick a video from the previews, trim it, and insert it into a project — it drops into <code>images/</code> and gives you the <code>js/photos.js</code> row, like a photo.</p>
+    <p class="muted">Pick a video, trim it, and <b>Insert</b> — the clip saves straight into <code>videos/&lt;project&gt;/</code> and shows up in that project's gallery on refresh. Run <code>serve.py</code> for one-click saves: <b>no download, no folder picking.</b></p>
     <div class="toolbar">
       <button id="btnFolder" class="primary">📁 Open video folder…</button>
       <button id="btnFiles">＋ Add files…</button>
       <input id="file" type="file" accept="video/*" multiple hidden />
       <span class="spacer"></span>
-      <span class="pill" id="pillImages">images/ not set</span>
-      <button id="btnImagesDir">Set images/ folder</button>
+      <span class="pill" id="pillImages">site folder not set</span>
+      <button id="btnImagesDir">🔗 Connect site folder…</button>
+      <label class="pill" style="display:inline-flex;align-items:center;gap:8px;text-transform:none;letter-spacing:normal;color:var(--dim)">New clips → gallery of
+        <select id="defProject" style="width:auto;padding:5px 8px" title="Default project for every clip you insert (slot defaults to gallery)">
+          <option value="uh88-weather">uh88-weather</option>
+          <option value="rose-arm">rose-arm</option>
+          <option value="mini-bridge">mini-bridge</option>
+          <option value="steel-bridge">steel-bridge</option>
+          <option value="soma-pump">soma-pump</option>
+          <option value="stair-robot">stair-robot</option>
+          <option value="kealakehe">kealakehe</option>
+          <option value="personal">personal</option>
+        </select>
+      </label>
       <span class="count"><b id="nDone">0</b> / <span id="nTotal">0</span> inserted</span>
     </div>
   </header>
@@ -175,10 +187,11 @@
           <label class="field"><span>Caption (optional)</span><input id="outCaption" type="text" /></label>
         </div>
         <div class="row">
-          <button id="btnInsert" class="primary">✚ Insert (save + add row)</button>
+          <button id="btnInsert" class="primary">✚ Insert (save to videos/)</button>
           <button id="btnDownload">↓ Download only</button>
         </div>
-        <p class="hint">“Insert” saves the <code>.webm</code> into your <code>images/</code> folder (set it up top) and adds its row to the batch below.</p>
+        <p class="hint">“Insert” saves the <code>.webm</code> into <code>videos/&lt;project&gt;/</code> for the project you pick above. With <code>serve.py</code> running it’s automatic; otherwise it uses your connected site folder, or downloads for you to drop in. It appears in that project’s gallery on refresh — fine-tune later with <code>#edit</code>.</p>
+        <div class="status" id="insertStatus"></div>
       </div>
 
       <div id="batchCard" class="card" hidden>
@@ -189,7 +202,7 @@
           <button id="btnCopyRows" class="primary">Copy all rows</button>
           <button id="btnSaveAll">Save all to images/…</button>
         </div>
-        <p class="hint">Paste the rows into <code>js/photos.js</code> (or the live <code>#edit</code> editor's label sheet).</p>
+        <p class="hint">Session log of clips you’ve added — they live in <code>videos/&lt;project&gt;/</code> and auto-appear on their project page. Before deploying, bake them into <code>js/photos.js</code> via a project page’s <code>#edit</code> → <b>Copy label sheet</b>.</p>
       </div>
     </section>
   </main>
@@ -207,7 +220,7 @@
     let sources = [];          // [{name, getFile, done, _file, _url}]
     let curName = '';
     let startT = 0, endT = 0, dur = 0, lastBlob = null;
-    let imagesDir = null;
+    let imagesDir = null, photosFile = null, siteRoot = null, videosDir = null, autoSave = false;
     const batch = [];
 
     async function fileOf(src){ return src._file || (src._file = await src.getFile()); }
@@ -284,14 +297,30 @@
       }catch(err){ if(err && err.name!=='AbortError') toast('Could not open folder: '+err.message); }
     });
 
+    function updateFolderPill(){
+      const pill = $('#pillImages');
+      if(autoSave){ pill.textContent='⚡ auto-save ON → videos/'; pill.classList.add('on'); return; }
+      if(videosDir){ pill.textContent=(siteRoot ? siteRoot.name+' · ' : '')+'videos/ ✓ (folder)'; pill.classList.add('on'); return; }
+      pill.textContent='not connected — clips download'; pill.classList.remove('on');
+    }
     $('#btnImagesDir').addEventListener('click', async ()=>{
       if(!window.showDirectoryPicker){ toast('This browser can’t save to a folder — clips will download instead.'); return; }
       try{
-        imagesDir = await window.showDirectoryPicker({ id:'site-images', mode:'readwrite' });
-        $('#pillImages').textContent = 'images/ → '+imagesDir.name; $('#pillImages').classList.add('on');
-        toast('Save target set — Insert writes clips straight into it.');
+        const picked = await window.showDirectoryPicker({ id:'site-root', mode:'readwrite' });
+        // Prefer treating the pick as the site root (folder that holds videos/ + images/ + js/).
+        let imgDir=null, pFile=null, vidDir=null;
+        try{ vidDir = await picked.getDirectoryHandle('videos', {create:true}); }catch(e){}
+        try{ imgDir = await picked.getDirectoryHandle('images'); }catch(e){}
+        try{ const jsDir = await picked.getDirectoryHandle('js'); pFile = await jsDir.getFileHandle('photos.js'); }catch(e){}
+        if(vidDir || imgDir){ siteRoot = picked; videosDir = vidDir; imagesDir = imgDir; photosFile = pFile; }
+        else { siteRoot = null; videosDir = null; imagesDir = picked; photosFile = null; }   // fallback: user picked images/ directly
+        updateFolderPill();
+        if(videosDir) toast('Site folder connected — Insert saves clips straight into videos/<project>/.');
+        else if(imagesDir) toast('images/ set. Tip: pick the site root (holds videos/) so clips save into videos/<project>/.');
       }catch(err){ if(err && err.name!=='AbortError') toast('Could not set folder: '+err.message); }
     });
+
+    $('#defProject').addEventListener('change', ()=>{ $('#rowProject').value = $('#defProject').value; });
 
     async function loadSource(src){
       curName = src.name; markStates();
@@ -300,6 +329,8 @@
       let url; try{ url = await urlOf(src); }catch(err){ toast('Could not read '+src.name); return; }
       video.src = url; video.load();
       $('#outName').value = src.name.replace(/\.[^.]+$/,'') + '-clip.webm';
+      $('#rowProject').value = $('#defProject').value;   // default target project (set once, up top)
+      $('#rowStep').value = 'gallery';                    // videos default into the gallery slot
       $('#editor').scrollIntoView({behavior:'smooth', block:'start'});
     }
 
@@ -353,13 +384,25 @@
       const chunks=[]; rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
       const stopped=new Promise(res=>rec.onstop=res);
       const prog=$('#prog'); prog.hidden=false; prog.value=0; setStatus('Recording… keep this tab focused.',false);
-      await seek(startT); await new Promise(r=>setTimeout(r,60)); rec.start(); await video.play();
-      const total=Math.max(0.001,endT-startT); let stopping=false;
+      const cleanupStreams=()=>{ if(srcStream) srcStream.getTracks().forEach(t=>t.stop()); cStream.getTracks().forEach(t=>t.stop()); video.muted=false; };
+      await seek(startT); await new Promise(r=>setTimeout(r,60)); rec.start();
+      try{ await video.play(); }
+      catch(err){ try{rec.stop();}catch(e){} cleanupStreams(); prog.hidden=true; setStatus('Couldn’t start playback — click the video once, keep this tab focused & visible, then Export again.',true); btn.disabled=false; return; }
+      const total=Math.max(0.001,endT-startT); let stopping=false, aborted=false;
       const useRVFC = !!video.requestVideoFrameCallback;
+      // watchdog: if playback never advances (tab not focused/composited), stop instead of hanging on "Recording…"
+      let lastCT=-1, stalls=0;
+      const watchdog=setInterval(()=>{
+        if(stopping) return;
+        if(Math.abs(video.currentTime-lastCT)<0.001) stalls++; else { stalls=0; lastCT=video.currentTime; }
+        if(stalls>=8){ aborted=true; stopping=true; clearInterval(watchdog); try{video.pause();}catch(e){} setTimeout(()=>{ try{rec.stop();}catch(e){} },20); }
+      },500);
       const stepFn=()=>{ if(stopping) return; try{ ctx.drawImage(video,0,0,tw,th); }catch(e){} prog.value=clamp((video.currentTime-startT)/total,0,1); if(video.currentTime>=endT||video.ended){ stopping=true; video.pause(); setTimeout(()=>{ try{rec.stop();}catch(e){} },40); return; } useRVFC?video.requestVideoFrameCallback(stepFn):requestAnimationFrame(stepFn); };
       useRVFC?video.requestVideoFrameCallback(stepFn):requestAnimationFrame(stepFn);
       await stopped;
-      if(srcStream) srcStream.getTracks().forEach(t=>t.stop()); cStream.getTracks().forEach(t=>t.stop()); video.muted=false; prog.value=1;
+      clearInterval(watchdog); cleanupStreams();
+      if(aborted){ prog.hidden=true; setStatus('Export stalled — keep this tab focused & visible while it records (it plays in real time), then Export again.',true); btn.disabled=false; return; }
+      prog.value=1;
       const blob=new Blob(chunks,{type:'video/webm'}); lastBlob=blob;
       showResult(blob,tw,th); setStatus('Done — '+(blob.size/1048576).toFixed(2)+' MB.',false); btn.disabled=false;
     });
@@ -369,26 +412,76 @@
       const card=$('#result'); card.hidden=false; const outV=$('#out');
       if(outV.src) URL.revokeObjectURL(outV.src); outV.src=URL.createObjectURL(blob);
       $('#outMeta').textContent = `${tw}×${th} · ${fmt(endT-startT)} · ${(blob.size/1048576).toFixed(2)} MB · webm`;
+      const is=$('#insertStatus'); if(is){ is.textContent=''; is.classList.remove('err'); }
       card.scrollIntoView({behavior:'smooth', block:'nearest'});
     }
     function cleanName(){ let n=$('#outName').value.trim()||'clip.webm'; if(!/\.webm$/i.test(n)) n=n.replace(/\.[^.]+$/,'')+'.webm'; return n.replace(/[^\w.\-]+/g,'-'); }
     const esc = s => String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
-    function rowFor(c){ return `  { file: "${esc(c.name)}", project: "${esc(c.project)}", step: "${esc(c.step)}", caption: "${esc(c.caption)}" },`; }
+    function rowFor(c){ const d = c.dir ? `, dir: "${esc(c.dir)}"` : ''; return `  { file: "${esc(c.name)}", project: "${esc(c.project)}", step: "${esc(c.step)}", caption: "${esc(c.caption)}"${d} },`; }
     function downloadBlob(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); }
     async function writeToImages(blob,name){ const fh=await imagesDir.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(blob); await w.close(); }
+    // Fully automatic: hand the clip to serve.py, which drops it into videos/<project>/.
+    async function uploadToVideos(blob, project, name){
+      const res = await fetch('/upload/'+encodeURIComponent(project), { method:'POST', headers:{'X-Filename':name}, body:blob });
+      if(!res.ok) throw new Error('upload HTTP '+res.status);
+      const j = await res.json().catch(()=>({}));
+      return j.path || ('videos/'+project+'/'+name);
+    }
+    // Fallback when serve.py isn't running but a site folder is connected.
+    async function writeToVideosFS(blob, project, name){
+      const dir = await videosDir.getDirectoryHandle(project, {create:true});
+      const fh = await dir.getFileHandle(name, {create:true});
+      const w = await fh.createWritable(); await w.write(blob); await w.close();
+      return 'videos/'+project+'/'+name;
+    }
+    // On load, detect whether the upload server is running and reflect it in the pill.
+    (async ()=>{ try{ const r = await fetch('/upload-ping', {cache:'no-store'}); autoSave = r.ok; }catch(e){ autoSave = false; } updateFolderPill(); })();
+    async function patchPhotosFile(clip){
+      const text = await (await photosFile.getFile()).text();
+      const nl = text.includes('\r\n') ? '\r\n' : '\n';
+      const lines = text.split(/\r?\n/);
+      const rowLine = rowFor(clip);
+      const fileTok = `file: "${esc(clip.name)}"`;
+      const existingIdx = lines.findIndex(l=>l.includes(fileTok));
+      if(existingIdx !== -1){
+        lines[existingIdx] = rowLine;                              // same file name → update in place
+      } else {
+        const projTok = `project: "${esc(clip.project)}"`;
+        let lastProj = -1;
+        for(let i=0;i<lines.length;i++){ if(lines[i].includes('file:') && lines[i].includes(projTok)) lastProj = i; }
+        if(lastProj !== -1){ lines.splice(lastProj+1, 0, rowLine); }               // group with its project
+        else { const close = lines.findIndex(l=>l.trim().startsWith(']')); lines.splice(close===-1?lines.length:close, 0, rowLine); }
+      }
+      const w = await photosFile.createWritable();
+      await w.write(lines.join(nl));
+      await w.close();
+    }
 
     $('#btnDownload').addEventListener('click', ()=>{ if(lastBlob) downloadBlob(lastBlob, cleanName()); });
 
     $('#btnInsert').addEventListener('click', async ()=>{
       if(!lastBlob) return;
-      const clip={ name:cleanName(), project:$('#rowProject').value, step:$('#rowStep').value, caption:$('#outCaption').value.trim(), blob:lastBlob };
-      if(imagesDir){ try{ await writeToImages(clip.blob, clip.name); }catch(err){ toast('Save failed: '+err.message+' — downloading instead.'); downloadBlob(clip.blob, clip.name); } }
-      else { downloadBlob(clip.blob, clip.name); toast('images/ folder not set — clip downloaded; move it into images/.'); }
-      const existing = batch.find(b=>b.name===clip.name);
-      if(existing) Object.assign(existing, clip); else batch.push(clip);
-      const src = sources.find(s=>s.name===curName); if(src){ src.done=true; markStates(); }
-      renderBatch();
-      toast(`Inserted → ${clip.project} / ${clip.step}. Copy the rows into photos.js when done.`);
+      const project=$('#rowProject').value;
+      const clip={ name:cleanName(), project, step:$('#rowStep').value, caption:$('#outCaption').value.trim(), blob:lastBlob, dir:'videos/'+project };
+      const is=$('#insertStatus');
+      const markDone = path => {
+        const existing = batch.find(b=>b.name===clip.name);
+        if(existing) Object.assign(existing, clip); else batch.push(clip);
+        const src = sources.find(s=>s.name===curName); if(src){ src.done=true; markStates(); }
+        renderBatch();
+        is.textContent = `✓ Saved → ${path} · shows in ${project}'s gallery on refresh`; is.classList.remove('err');
+        toast(`Saved into videos/${project}/ ✓`);
+      };
+      // 1) upload server (serve.py) — fully automatic, no download / no picking
+      try{ return markDone(await uploadToVideos(clip.blob, project, clip.name)); }
+      catch(e){ /* server not running — try the next option */ }
+      // 2) a connected site folder (File System Access)
+      if(videosDir){ try{ return markDone(await writeToVideosFS(clip.blob, project, clip.name)); }catch(e){ /* fall through */ } }
+      // 3) download fallback — drop it into the folder yourself
+      downloadBlob(clip.blob, clip.name);
+      is.textContent = `Downloaded → drop it into videos/${project}/. (Run serve.py, or Connect the site folder, to skip this step.)`;
+      is.classList.remove('err');
+      toast(`Downloaded — drop it into videos/${project}/.`);
     });
 
     function renderBatch(){
