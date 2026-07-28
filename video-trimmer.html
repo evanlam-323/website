@@ -166,7 +166,7 @@
         </div>
         <div class="row">
           <button id="btnExport" class="primary">● Export trimmed clip</button>
-          <span class="muted">Encoding runs in real time (as long as the selection) — keep this tab focused.</span>
+          <span class="muted" id="exportNote">Encoding runs in real time (as long as the selection) — keep this tab focused.</span>
         </div>
         <progress id="prog" max="1" value="0" hidden></progress>
         <div class="status" id="status"></div>
@@ -220,7 +220,7 @@
     let sources = [];          // [{name, getFile, done, _file, _url}]
     let curName = '';
     let startT = 0, endT = 0, dur = 0, lastBlob = null;
-    let imagesDir = null, photosFile = null, siteRoot = null, videosDir = null, autoSave = false;
+    let imagesDir = null, photosFile = null, siteRoot = null, videosDir = null, autoSave = false, serverFfmpeg = false;
     const batch = [];
 
     async function fileOf(src){ return src._file || (src._file = await src.getFile()); }
@@ -371,7 +371,48 @@
     const seek = t => new Promise(res=>{ const on=()=>{ video.removeEventListener('seeked',on); res(); }; video.addEventListener('seeked',on); video.currentTime=t; });
     function setStatus(msg,err){ const s=$('#status'); s.textContent=msg; s.classList.toggle('err',!!err); }
 
+    // Instant, background-safe export: hand the source + trim points to serve.py,
+    // which ffmpeg-cuts the selection and returns the .webm. No real-time playback,
+    // so no "keep the tab focused" requirement and no stall watchdog.
+    async function exportViaServer(){
+      const src = sources.find(s=>s.name===curName);
+      if(!src){ setStatus('Pick a video first.', true); return; }
+      const btn=$('#btnExport'); btn.disabled=true; selLoop=false; video.pause();
+      const prog=$('#prog'); prog.hidden=false; prog.removeAttribute('value');   // indeterminate spinner
+      setStatus('Trimming on the server with ffmpeg… (a few seconds)', false);
+      try{
+        const file = await fileOf(src);
+        const ext = (src.name.match(/\.[^.]+$/)||['.mp4'])[0];
+        const res = await fetch('/trim', {
+          method:'POST',
+          headers:{
+            'X-Start': String(startT), 'X-End': String(endT),
+            'X-Fps': $('#fps').value, 'X-Scale': $('#scale').value,
+            'X-Bitrate': $('#bitrate').value, 'X-Audio': $('#audio').value,
+            'X-Ext': ext, 'Content-Type': 'application/octet-stream'
+          },
+          body: file
+        });
+        if(!res.ok){
+          let msg = 'HTTP '+res.status;
+          try{ const j = await res.json(); if(j && j.error){ msg = j.error + (j.detail ? ' — '+String(j.detail).trim().split('\n').slice(-1)[0] : ''); } }catch(e){}
+          throw new Error(msg);
+        }
+        const blob = await res.blob();
+        if(!blob.size) throw new Error('server returned an empty clip');
+        prog.value = 1;
+        lastBlob = blob;
+        const [tw,th] = video.videoWidth ? targetDims() : [0,0];
+        showResult(blob, tw, th);
+        setStatus('Done — '+(blob.size/1048576).toFixed(2)+' MB (ffmpeg).', false);
+      }catch(err){
+        prog.hidden = true;
+        setStatus('Server export failed: '+err.message+'. Try again, or use “Download only”.', true);
+      }finally{ btn.disabled = false; }
+    }
+
     $('#btnExport').addEventListener('click', async ()=>{
+      if(serverFfmpeg){ return exportViaServer(); }
       if(!window.MediaRecorder){ setStatus('MediaRecorder is not supported in this browser.', true); return; }
       const btn=$('#btnExport'); btn.disabled=true; selLoop=false; video.pause();
       const [tw,th]=targetDims(); const fps=Number($('#fps').value)||30;
@@ -411,7 +452,7 @@
     function showResult(blob,tw,th){
       const card=$('#result'); card.hidden=false; const outV=$('#out');
       if(outV.src) URL.revokeObjectURL(outV.src); outV.src=URL.createObjectURL(blob);
-      $('#outMeta').textContent = `${tw}×${th} · ${fmt(endT-startT)} · ${(blob.size/1048576).toFixed(2)} MB · webm`;
+      $('#outMeta').textContent = (tw&&th ? `${tw}×${th} · ` : '') + `${fmt(endT-startT)} · ${(blob.size/1048576).toFixed(2)} MB · webm`;
       const is=$('#insertStatus'); if(is){ is.textContent=''; is.classList.remove('err'); }
       card.scrollIntoView({behavior:'smooth', block:'nearest'});
     }
@@ -434,8 +475,22 @@
       const w = await fh.createWritable(); await w.write(blob); await w.close();
       return 'videos/'+project+'/'+name;
     }
-    // On load, detect whether the upload server is running and reflect it in the pill.
-    (async ()=>{ try{ const r = await fetch('/upload-ping', {cache:'no-store'}); autoSave = r.ok; }catch(e){ autoSave = false; } updateFolderPill(); })();
+    // On load, detect whether the upload server is running (and whether it has
+    // ffmpeg for instant, no-foreground-tab export) and reflect it in the UI.
+    (async ()=>{
+      try{ const r = await fetch('/upload-ping', {cache:'no-store'}); autoSave = r.ok; const j = r.ok ? await r.json().catch(()=>({})) : {}; serverFfmpeg = !!j.ffmpeg; }
+      catch(e){ autoSave = false; serverFfmpeg = false; }
+      updateFolderPill(); reflectExportMode();
+    })();
+    function reflectExportMode(){
+      const note = $('#exportNote'), btn = $('#btnExport');
+      if(serverFfmpeg){
+        if(note) note.textContent = 'Trimmed on the server with ffmpeg — instant, no need to keep this tab focused.';
+        if(btn) btn.textContent = '● Export trimmed clip (ffmpeg)';
+      } else {
+        if(note) note.textContent = 'Encoding runs in real time (as long as the selection) — keep this tab focused & visible. (Run serve.py with ffmpeg for instant, background-safe export.)';
+      }
+    }
     async function patchPhotosFile(clip){
       const text = await (await photosFile.getFile()).text();
       const nl = text.includes('\r\n') ? '\r\n' : '\n';
