@@ -1414,6 +1414,136 @@ async function initVideoFolder() {
   if (added && typeof rerenderPhotos === 'function') rerenderPhotos();
 }
 
+/* ---- Goals checklist (about page) ----
+   Native checkboxes whose checked state is remembered per-position in this
+   browser (localStorage), so ticking a goal survives a reload. Keyed by index —
+   fine for the placeholder list; safe to re-key once the real goals are written. */
+const GOALS_KEY = 'aboutGoals';
+function initGoals() {
+  const list = document.querySelector('[data-goals]');
+  if (!list) return;
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem(GOALS_KEY) || '[]'); } catch { saved = []; }
+  const boxes = [...list.querySelectorAll('input[type="checkbox"]')];
+  boxes.forEach((box, i) => {
+    if (saved[i]) box.checked = true;
+    box.addEventListener('change', () => {
+      const state = boxes.map(b => b.checked);
+      localStorage.setItem(GOALS_KEY, JSON.stringify(state));
+    });
+  });
+}
+
+/* ---- Personal photo slots (hero portrait + about-page photo) ----
+   A slot is any element with data-personal-slot="hero|about". Its chosen photo
+   (a file from the "personal" set in js/photos.js) is remembered in this browser.
+   In edit mode (#edit) each slot gets a "+" button that opens a picker of the
+   personal photos; clicking one fills the slot instantly. */
+const PERSONAL_SLOTS_KEY = 'personalSlots';
+function loadPersonalSlots() {
+  try { return JSON.parse(localStorage.getItem(PERSONAL_SLOTS_KEY) || '{}'); }
+  catch { return {}; }
+}
+function savePersonalSlots(o) { localStorage.setItem(PERSONAL_SLOTS_KEY, JSON.stringify(o)); }
+
+// The personal photos offered in the picker: the "personal" rows from photos.js
+// that are images (skip video clips).
+function personalPhotoFiles() {
+  return (window.PHOTOS || [])
+    .filter(p => p.project === 'personal' && !isVideoFile(p.file))
+    .map(p => p.file);
+}
+
+function renderPersonalSlot(slot) {
+  const chosen = loadPersonalSlots()[slot.dataset.personalSlot];
+  let img = slot.querySelector('.portrait-img');
+  const ph = slot.querySelector('.portrait-ph');
+  if (chosen) {
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'portrait-img';
+      slot.insertBefore(img, ph || null);
+    }
+    img.src = 'images/' + chosen;
+    img.alt = slot.dataset.personalSlot === 'hero' ? 'Evan Lam' : '';
+    img.style.display = '';
+    img.onerror = () => { img.style.display = 'none'; if (ph) ph.classList.add('show'); };
+    if (ph) ph.classList.remove('show');
+    slot.classList.remove('slot-empty');
+  } else {
+    // No pick yet: hero falls back to its baked images/portrait.jpg; the about
+    // slot has no default, so show its placeholder.
+    if (slot.dataset.personalSlot !== 'hero') {
+      if (img) img.style.display = 'none';
+      if (ph) ph.classList.add('show');
+      slot.classList.add('slot-empty');
+    }
+  }
+}
+
+function initPersonalSlots() {
+  const slots = [...document.querySelectorAll('[data-personal-slot]')];
+  if (!slots.length) return;
+  slots.forEach(renderPersonalSlot);
+  if (editingRequested()) enablePersonalEditing();
+  window.addEventListener('hashchange', () => { if (editingRequested()) enablePersonalEditing(); });
+}
+
+function enablePersonalEditing() {
+  document.querySelectorAll('[data-personal-slot]').forEach(slot => {
+    if (slot.querySelector(':scope > .personal-add-btn')) return;   // idempotent
+    slot.classList.add('slot-editable');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'personal-add-btn';
+    btn.textContent = '+';
+    btn.title = 'Pick a photo from your personal set';
+    btn.setAttribute('aria-label', 'Pick a photo from your personal set');
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation(); ev.preventDefault();
+      openPersonalPicker(slot.dataset.personalSlot);
+    });
+    slot.appendChild(btn);
+  });
+}
+
+function openPersonalPicker(slotName) {
+  document.querySelector('.personal-picker')?.remove();
+  const files = personalPhotoFiles();
+  const overlay = document.createElement('div');
+  overlay.className = 'personal-picker';
+  const grid = files.length
+    ? files.map(f => `<button type="button" class="pp-item" data-file="${escHtml(f)}"><img src="images/${escHtml(f)}" loading="lazy" alt="" /></button>`).join('')
+    : `<p class="pp-empty">No personal photos found in js/photos.js.</p>`;
+  overlay.innerHTML = `
+    <div class="pp-panel" role="dialog" aria-label="Pick a personal photo">
+      <div class="pp-head"><h3>Pick a photo</h3><button type="button" class="pp-close" aria-label="Close">✕</button></div>
+      <div class="pp-grid">${grid}</div>
+      <div class="pp-foot"><button type="button" class="pp-clear">Remove photo</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  overlay.querySelector('.pp-close').addEventListener('click', close);
+  overlay.querySelector('.pp-clear').addEventListener('click', () => {
+    const map = loadPersonalSlots(); delete map[slotName]; savePersonalSlots(map);
+    document.querySelectorAll(`[data-personal-slot="${slotName}"]`).forEach(renderPersonalSlot);
+    enablePersonalEditing();
+    close();
+    photoToast('Photo removed — saved to this browser.');
+  });
+  overlay.querySelectorAll('.pp-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const map = loadPersonalSlots(); map[slotName] = item.dataset.file; savePersonalSlots(map);
+      document.querySelectorAll(`[data-personal-slot="${slotName}"]`).forEach(renderPersonalSlot);
+      enablePersonalEditing();
+      close();
+      photoToast('Photo set — saved to this browser.');
+    });
+  });
+}
+
 /* ---- boot ---- */
 document.addEventListener('DOMContentLoaded', () => {
   injectLayout();
@@ -1429,4 +1559,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initCardPagers();
   initCaptionEditor();
   initVideoFolder();
+  initGoals();
+  initPersonalSlots();
 });

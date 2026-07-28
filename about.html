@@ -8,17 +8,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=20" />
+  <link rel="stylesheet" href="css/style.css?v=22" />
 </head>
 <body data-page="about">
 
   <div id="header-mount"></div>
 
   <main class="section-dark grid-bg">
-    <div class="page-hero">
-      <p class="eyebrow">Profile / 00</p>
-      <h1>About</h1>
-      <p>Mechanical engineering student at the University of Hawaiʻi at Mānoa, working across robotics, additive manufacturing, and structural design. I like the messy middle — turning a concept into something fabricated, tested, and competed.</p>
+    <div class="page-hero about-hero">
+      <div class="page-hero-copy">
+        <p class="eyebrow">Profile / 00</p>
+        <h1>About</h1>
+        <p>Mechanical engineering student at the University of Hawaiʻi at Mānoa, working across robotics, additive manufacturing, and structural design. I like the messy middle — turning a concept into something fabricated, tested, and competed.</p>
+      </div>
+      <div class="hero-portrait about-photo" data-personal-slot="about">
+        <span class="corner tl"></span><span class="corner tr"></span>
+        <span class="corner bl"></span><span class="corner br"></span>
+        <div class="portrait-ph show">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+          <span>Add a photo — open #edit</span>
+        </div>
+      </div>
     </div>
 
     <div class="about-grid">
@@ -42,13 +52,17 @@
       </div>
 
       <div class="reveal">
-        <h2>Timeline</h2>
-        <div class="timeline">
-          <div class="timeline-item"><span class="yr">2025 —</span><div><h4>Undergraduate Research Assistant</h4><span>SoMa Laboratories — additive-manufacturing pump subsystem</span></div></div>
-          <div class="timeline-item"><span class="yr">2024 —</span><div><h4>Mechanical Lead</h4><span>Robotics Space Exploration (RoSE) — 6-DOF rover arm</span></div></div>
-          <div class="timeline-item"><span class="yr">2024 — 28</span><div><h4>BS Mechanical Engineering</h4><span>University of Hawaiʻi at Mānoa</span></div></div>
-          <div class="timeline-item"><span class="yr">2021 — 24</span><div><h4>FIRST Robotics</h4><span>Fabricator / designer · three seasons</span></div></div>
-        </div>
+        <h2>Goals</h2>
+        <ul class="goals" data-goals>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Load-test the 3D-printed mini-bridge past 70 lbs</span></label></li>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Get the 6-DOF arm to full autonomous sample retrieval</span></label></li>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Finish the SoMa additive-manufacturing pump subsystem</span></label></li>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Publish undergraduate research findings</span></label></li>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Land a summer internship in robotics or aerospace</span></label></li>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Stay on the Dean's List every remaining semester</span></label></li>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Master an FEA / simulation-driven design workflow</span></label></li>
+          <li class="goal-item"><label><input type="checkbox" /><span class="goal-box" aria-hidden="true"></span><span class="goal-text">Mentor a FIRST Robotics team</span></label></li>
+        </ul>
       </div>
     </div>
 
@@ -96,6 +110,7 @@
   </main>
 
   <div id="footer-mount"></div>
-  <script src="js/main.js?v=20"></script>
+  <script src="js/photos.js?v=22"></script>
+  <script src="js/main.js?v=22"></script>
 </body>
 </html>

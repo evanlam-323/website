@@ -32,7 +32,8 @@ window.PHOTOS = [
   { file: "IMG_5303.jpg", project: "rose-arm", step: "process-1", caption: "" },
   { file: "IMG_5320.jpg", project: "rose-arm", step: "process-2", caption: "" },
   { file: "IMG_5645.jpg", project: "rose-arm", step: "process-3", caption: "" },
-  { file: "IMG_5646.jpg", project: "rose-arm", step: "cover", caption: "" },
+  { file: "IMG_7334.jpg", project: "rose-arm", step: "cover", caption: "" },
+  { file: "IMG_5646.jpg", project: "rose-arm", step: "gallery", caption: "" },
   { file: "IMG_6553.jpg", project: "rose-arm", step: "process-4", caption: "" },
   { file: "76216844423__2135E1AA-599D-4CDA-8B65-0733BA856E86.jpg", project: "rose-arm", step: "gallery", caption: "" },
   { file: "IMG_2431.jpg", project: "rose-arm", step: "gallery", caption: "" },
@@ -68,6 +69,7 @@ window.PHOTOS = [
   /* ---- Steel Bridge ---- */
   { file: "IMG_1760.jpg", project: "steel-bridge", step: "process-1", caption: "" },
   { file: "IMG_7143.jpg", project: "steel-bridge", step: "process-5", caption: "" },
+  { file: "steel-bridge-team.jpg", project: "steel-bridge", step: "gallery", caption: "" },
 
   /* ---- Soma Pump ---- */
   { file: "IMG_5514.jpg", project: "soma-pump", step: "process-2", caption: "" },
