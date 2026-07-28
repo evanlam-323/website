@@ -41,6 +41,18 @@ window.PHOTOS = [
   { file: "IMG_3503.jpg", project: "rose-arm", step: "gallery", caption: "" },
 
   /* ---- 3D-Printed Mini-Bridge ---- */
+  { file: "mini-bridge-p1a.jpg", project: "mini-bridge", step: "process-1.0", caption: "Read the competition rulebook and flagged every hard constraint — load, dimensions, and print limits.", title: "Rules & Requirements" },
+  { file: "mini-bridge-p1b.jpg", project: "mini-bridge", step: "process-1.1", caption: "Dug into failure modes and past builds to set a safe 70+ lb load target before committing.", title: "Extra Research" },
+  { file: "mini-bridge-p2a.jpg", project: "mini-bridge", step: "process-2.0", caption: "Kicked off the project and split the work across Civil/Structural and Mechanical members.", title: "Team Coordination" },
+  { file: "mini-bridge-p2b.jpg", project: "mini-bridge", step: "process-2.1", caption: "Ran weekly syncs to keep both disciplines aligned on the spec and schedule.", title: "Weekly Syncs" },
+  { file: "mini-bridge-p3a.jpg", project: "mini-bridge", step: "process-3.0", caption: "Sketched the first truss concept against the printer's build envelope.", title: "Design" },
+  { file: "mini-bridge-p3b.jpg", project: "mini-bridge", step: "process-3.1", caption: "Iterated the geometry in CAD for the best strength-to-weight ratio.", title: "Iteration" },
+  { file: "mini-bridge-p3c.jpg", project: "mini-bridge", step: "process-3.2", caption: "Locked the final design and prepped the model for slicing.", title: "Final Design" },
+  { file: "mini-bridge-p4a.jpg", project: "mini-bridge", step: "process-4.0", caption: "Printed the members, dialing in wall count and infill for strength.", title: "Print & Assemble" },
+  { file: "mini-bridge-p4b.jpg", project: "mini-bridge", step: "process-4.1", caption: "Assembled the joints where the load concentrates.", title: "Assembly" },
+  { file: "mini-bridge-p5a.jpg", project: "mini-bridge", step: "process-5.0", caption: "Rigged the finished bridge into the load-test fixture.", title: "Load Testing" },
+  { file: "mini-bridge-p5b.jpg", project: "mini-bridge", step: "process-5.1", caption: "Loaded it past the 70+ lb target.", title: "Loading" },
+  { file: "mini-bridge-p5c.jpg", project: "mini-bridge", step: "process-5.2", caption: "Studied the failure mode and fed it into the next revision.", title: "Failure Analysis" },
   { file: "0A3EA181-2469-4CFB-8F04-9F77999EAFA6.jpg", project: "mini-bridge", step: "gallery", caption: "" },
   { file: "IMG_5481.jpg", project: "mini-bridge", step: "gallery", caption: "" },
   { file: "IMG_5485.jpg", project: "mini-bridge", step: "gallery", caption: "" },

@@ -18,10 +18,10 @@ Context for another chat/session to continue the work. Delete this file when don
 - **`.brand` CSS class** (`text-transform: none`) preserves mixed-case names like **RoSE** / **SoMa**. Wrap just the brand word: `Team <span class="brand">RoSE</span>`.
 - **`.reveal`** = fade-in-on-scroll (IntersectionObserver in main.js).
 - **Theme:** near-black `--bg: #0b0b0c`, industrial red-orange `--accent: #ea4a2a`. Panels `--bg-2: #0f0f11`, `--panel: #141416`. Change `--accent` to re-theme everything.
-- **✅ Cache-busting — currently `?v=17`.** Every page links shared assets with a version query — `css/style.css?v=17`, `js/main.js?v=17`, `js/photos.js?v=17`. **After editing CSS or JS you MUST bump the number on ALL html files** so browsers load the new file:
+- **✅ Cache-busting — currently `?v=18`.** Every page links shared assets with a version query — `css/style.css?v=18`, `js/main.js?v=18`, `js/photos.js?v=18`. **After editing CSS or JS you MUST bump the number on ALL html files** so browsers load the new file:
   ```bash
-  # from project root — bump v=17 to v=18 everywhere
-  sed -i 's/?v=17/?v=18/g' *.html
+  # from project root — bump v=18 to v=19 everywhere
+  sed -i 's/?v=18/?v=19/g' *.html
   ```
   ⚠️ Only matters under plain `http.server` (browser caches by URL). **`serve.py` sends everything `Cache-Control: no-store`, so locally it always serves fresh** — but still bump for correctness before committing/deploying.
 
@@ -33,10 +33,10 @@ Context for another chat/session to continue the work. Delete this file when don
 ## Project-page conventions
 - **Standardized specs:** every project's `.project-specs` has Role · Team · Process · Organization.
 - **Process pile** — grey index-card skin `.process-section.process-pile.process-pile--index`; sticky cards stacked by z-index (`initProcessPile()`).
-- **Per-step photo pager** — a `process-N` slot with 2+ photos becomes a horizontal sweep pager (`buildProcessPager()` + `initCardPagers()`). Mini-bridge's pager is hand-authored inline (files like `mini-bridge-p1a.jpg`, NOT in `window.PHOTOS`).
+- **Per-step photo pager** — a `process-N` slot with 2+ photos becomes a horizontal sweep pager (`buildProcessPager()` + `initCardPagers()`). **Mini-bridge is now fully managed too (changed this session):** its 5 process cards are `data-slot="process-N"` and its 12 process photos live in `js/photos.js` as `process-N.k` rows carrying a per-slide **`title`** — so they get Move / editable captions / per-step +/− like every other project. (Was previously hand-authored inline; the `mini-bridge-pN*.jpg` image files still don't exist, so the slots render as fillable placeholders.) `PROCESS_STEP_COUNTS['mini-bridge']` is now `5`.
 
 ## Photo/video system (`js/photos.js` + `initPhotos`/`renderPhotos` in main.js)
-- **`window.PHOTOS`** is one row per asset: `{ file, project, step, caption }` (+ optional **`dir`**, new this session). `step` ∈ `cover` · `process-1…5` · `process-N.k` sub-slots · `gallery` · (personal only) `portrait`. Project ids: `uh88-weather · rose-arm · mini-bridge · steel-bridge · soma-pump · stair-robot · kealakehe · personal`.
+- **`window.PHOTOS`** is one row per asset: `{ file, project, step, caption }` (+ optional **`dir`** and **`title`**). `title` = a per-slide heading for process pager slides (mini-bridge uses it); `buildProcessPager` falls back to the step's shared `<h4>` when a row has no `title`, and `buildLabelSheetText` round-trips it. `step` ∈ `cover` · `process-1…5` · `process-N.k` sub-slots · `gallery` · (personal only) `portrait`. Project ids: `uh88-weather · rose-arm · mini-bridge · steel-bridge · soma-pump · stair-robot · kealakehe · personal`.
 - **Media path resolution (new):** `mediaSrc(entry)` returns `entry.dir ? entry.dir + '/' + entry.file : 'images/' + entry.file`. Photo rows (no `dir`) load from `images/`; video rows injected from the `videos/` folder carry `dir:"videos/<project>"` and load from there. All six render sites (lightbox, `setSlotMedia`, gallery `<img>`/`<video>`, pager string) go through it.
 - **Videos** render as `<video>` when `isVideoFile()` matches `.webm/.mp4/.mov/...`. Gallery video tiles show a first-frame poster + ▶ badge and play with controls in the lightbox. **Use `.webm` or H.264 `.mp4`** — iPhone `.mov` (HEVC) usually won't play in browsers.
 - **`buildLabelSheetText()`** now emits the `dir` field too, so baking the label sheet keeps folder videos pointing at `videos/` (deploy-safe).
@@ -57,8 +57,8 @@ Turns long clips into short web-ready ones. Pure `<video>` + `<canvas>` + `Media
 - **Source picker:** grid of hover-scrub video previews (**Open video folder…** via `showDirectoryPicker`, **＋ Add files…**, drag-drop). Source clips live in **`C:\Users\ninja\Downloads\drive-videos\`** (61 files, extracted + de-duped from the Drive zip; `.webm` output, `.mov`/`.mp4` sources).
 - **Default project dropdown** (header, "New clips → gallery of"): sets the target project for every clip you insert; slot defaults to `gallery`. Each loaded clip syncs to it.
 - **Trim:** click a preview → drag two timeline handles (or `Space` play, `[`/`]` set start/end).
-- **Export:** re-encodes ONLY the selection to `.webm` (canvas `captureStream` + `MediaRecorder`). Hardened this session: `video.play()` is wrapped (no more infinite hang on rejection) and a **stall watchdog** aborts with a clear message if playback doesn't advance.
-  - ⚠️ **Export is real-time and needs a VISIBLE, FOREGROUND browser tab** the whole time it records. **It does NOT work reliably in the Claude browser pane** — the pane goes `hidden` when you switch to chat, playback pauses, and the watchdog reports "Export stalled." **Use a real Chrome window kept in front** for the few-second export. (Durable alternative, not built: a server-side **ffmpeg** trim endpoint in `serve.py` — removes the real-time/foreground requirement and handles HEVC. ffmpeg is NOT installed. User chose real Chrome for now.)
+- **Export — server-side ffmpeg (default when `serve.py` + ffmpeg are present, NEW):** the Export button now POSTs the source bytes + trim points to **`serve.py` `/trim`**, which ffmpeg-cuts the selection and returns the `.webm`. **Instant (not real-time), no foreground/visible-tab requirement — works even in the Claude browser pane — and handles HEVC `.mov`.** The trimmer detects it via `/upload-ping` (`{ffmpeg:true}`) and relabels the button "Export trimmed clip (ffmpeg)". **ffmpeg installed this session via `winget install Gyan.FFmpeg` (8.1.2).** `serve.py` finds it on PATH or via a winget-dir glob (so it works before the shell's PATH refreshes).
+  - **Browser fallback (only when serve.py/ffmpeg is absent):** the old canvas `captureStream` + `MediaRecorder` path. That one IS real-time and needs a VISIBLE, FOREGROUND real-Chrome tab (the Claude pane goes `hidden` and the stall watchdog reports "Export stalled"). With ffmpeg present you never hit this.
 - **Insert → saves into `videos/<project>/`** (rewired this session; no longer touches `images/`/`photos.js`). Order: (1) **POST to `serve.py`** `/upload/<project>` — fully automatic, no download/no picking; (2) File System Access `videosDir` write if a site folder is connected; (3) plain **download** fallback (then drop it into `videos/<project>/` yourself). Status pill shows **⚡ auto-save ON → videos/** when `serve.py` is detected. Insert only marks a source ✓ when a write actually landed (honest counter).
 
 ## ⭐ Live caption editor + on-page photo/video mover (`#edit` mode)
@@ -85,10 +85,10 @@ Verified live under `serve.py`: `videos/<project>/` auto-scan injects + renders 
 
 ## Open decisions / TODO for next session
 1. **More videos:** trim the good clips from `drive-videos/` in a **visible Chrome tab** (serve.py running), Insert → they land in `videos/<project>/`.
-2. **Optional durable export:** install **ffmpeg** and add a `/trim` endpoint to `serve.py` so trimming is server-side (instant, no foreground-tab requirement, handles HEVC). User picked real-Chrome for now.
+2. ~~**Optional durable export:** install ffmpeg + add `/trim` to `serve.py`.~~ **✅ DONE** — ffmpeg installed (`winget Gyan.FFmpeg` 8.1.2), `serve.py` `/trim` endpoint added, Export rewired to use it (recorder kept as fallback). Verified end-to-end incl. HEVC `.mov` and inside the Claude pane.
 3. **Covers:** no project has a `cover` photo/video — banners are empty. Promote one per project.
 4. **Personal photos have no home:** `personal` rows sit in `photos.js` but nothing renders `data-project="personal"`.
 5. **Captions:** placed photos have blank captions — fill via `#edit`.
-6. **Cache-busters** at `?v=17` — bump on the next CSS/JS edit (or rely on serve.py no-store locally).
+6. **Cache-busters** at `?v=18` — bump on the next CSS/JS edit (or rely on serve.py no-store locally).
 7. Consider **GitHub Pages** for a live URL (remember to bake folder videos into `photos.js` first — see videos/ section).
 8. Update **PHOTOS.md** (user-facing how-to) to document the `videos/` folder + serve.py auto-save flow.

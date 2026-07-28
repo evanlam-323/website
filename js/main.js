@@ -610,10 +610,9 @@ const mediaSrc = entry => (entry && entry.dir ? String(entry.dir).replace(/\/+$/
 const MOVE_PROJECTS = ['uh88-weather', 'rose-arm', 'mini-bridge', 'steel-bridge', 'soma-pump', 'stair-robot', 'kealakehe', 'personal'];
 // How many process-step cards each project page actually has. The mover only
 // offers slots that exist on the target page — moving a photo to a step the page
-// doesn't have would just make it disappear. Mini-bridge's process is authored
-// inline (no data-slot cards) so it takes no managed process photos.
+// doesn't have would just make it disappear.
 const PROCESS_STEP_COUNTS = {
-  'uh88-weather': 5, 'rose-arm': 5, 'mini-bridge': 0, 'steel-bridge': 5,
+  'uh88-weather': 5, 'rose-arm': 5, 'mini-bridge': 5, 'steel-bridge': 5,
   'soma-pump': 4, 'stair-robot': 5, 'kealakehe': 5, 'personal': 0,
 };
 
@@ -834,7 +833,12 @@ function buildProcessPager(slot, entries, overrides) {
   const titleHTML = slot.querySelector('.card-head h4')?.outerHTML || '';
   const cardNum = (slot.querySelector('.card-num')?.textContent || '').trim();
   const baseNum = parseInt(cardNum.replace(/\D/g, ''), 10) || parseInt((slot.dataset.slot || '').replace('process-', ''), 10) || '';
-  const headFor = sub => `<div class="card-head"><span class="card-num">${esc(sub)}</span>${titleHTML}</div>`;
+  // Each slide can carry its own title (e.g. mini-bridge's per-photo headings);
+  // fall back to the step's shared title when a photo row has none.
+  const headFor = (sub, entry) => {
+    const t = (entry && entry.title) ? `<h4>${esc(entry.title)}</h4>` : titleHTML;
+    return `<div class="card-head"><span class="card-num">${esc(sub)}</span>${t}</div>`;
+  };
   // The step's written description is the plain <p> that isn't the photo caption.
   const descEl = [...slot.querySelectorAll(':scope > p')].find(p => !p.classList.contains('card-photo-cap'));
   const descHTML = descEl ? descEl.innerHTML : '';
@@ -864,7 +868,7 @@ function buildProcessPager(slot, entries, overrides) {
                onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />`;
     return `
       <div class="pager-slide" data-file="${esc(entry.file)}">
-        ${headFor(sub)}
+        ${headFor(sub, entry)}
         <div class="card-media">
           ${mediaHTML}
           <div class="media-ph">${phSvg}<span>${esc(sub)}</span></div>
@@ -1015,11 +1019,13 @@ function buildCaptionToolbar() {
   const bar = document.createElement('div');
   bar.className = 'cap-toolbar';
   bar.innerHTML = `
+    <span class="cap-grip" title="Drag to move" aria-hidden="true">⠿</span>
     <span class="cap-badge">✎ Editing photos</span>
     <button type="button" data-act="copy">Copy label sheet</button>
     <button type="button" data-act="reset">Reset my edits</button>
     <button type="button" data-act="done">Done</button>`;
   document.body.appendChild(bar);
+  makeToolbarDraggable(bar);
 
   bar.addEventListener('click', e => {
     const act = e.target.dataset.act;
@@ -1043,6 +1049,65 @@ function buildCaptionToolbar() {
   });
 }
 
+/* Let the editing toolbar be dragged out of the way. Drag anywhere on the bar
+   except the buttons; the position is remembered (localStorage) and re-clamped
+   into view on resize. */
+const CAP_POS_KEY = 'capToolbarPos';
+function clampToolbar(bar, x, y) {
+  const w = bar.offsetWidth, h = bar.offsetHeight;
+  return [
+    Math.max(6, Math.min(x, window.innerWidth - w - 6)),
+    Math.max(6, Math.min(y, window.innerHeight - h - 6)),
+  ];
+}
+function placeToolbar(bar, x, y) {
+  const [cx, cy] = clampToolbar(bar, x, y);
+  bar.style.transform = 'none';
+  bar.style.left = cx + 'px';
+  bar.style.top = cy + 'px';
+  bar.style.bottom = 'auto';
+}
+function makeToolbarDraggable(bar) {
+  try {
+    const p = JSON.parse(localStorage.getItem(CAP_POS_KEY) || 'null');
+    if (p && typeof p.left === 'number') placeToolbar(bar, p.left, p.top);
+  } catch { /* ignore */ }
+
+  let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0, moved = false;
+  bar.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;   // buttons still click normally
+    dragging = true; moved = false;
+    const r = bar.getBoundingClientRect();
+    ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
+    placeToolbar(bar, ox, oy);                // convert from centered to absolute
+    bar.classList.add('dragging');
+    try { bar.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    e.preventDefault();
+  });
+  bar.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 3) moved = true;
+    placeToolbar(bar, ox + (e.clientX - sx), oy + (e.clientY - sy));
+  });
+  const end = e => {
+    if (!dragging) return;
+    dragging = false;
+    bar.classList.remove('dragging');
+    try { bar.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+    if (moved) {
+      const r = bar.getBoundingClientRect();
+      localStorage.setItem(CAP_POS_KEY, JSON.stringify({ left: r.left, top: r.top }));
+    }
+  };
+  bar.addEventListener('pointerup', end);
+  bar.addEventListener('pointercancel', end);
+  window.addEventListener('resize', () => {
+    if (!bar.style.left) return;
+    const r = bar.getBoundingClientRect();
+    placeToolbar(bar, r.left, r.top);
+  });
+}
+
 function photoToast(msg) {
   let t = document.querySelector('.cap-toast');
   if (!t) { t = document.createElement('div'); t.className = 'cap-toast'; document.body.appendChild(t); }
@@ -1060,7 +1125,8 @@ function buildLabelSheetText() {
     const r = resolveRow(p, moves);
     const caption = overrides[p.file] != null ? overrides[p.file] : p.caption;
     const dir = p.dir ? `, dir: "${esc(p.dir)}"` : '';
-    return `  { file: "${esc(r.file)}", project: "${esc(r.project)}", step: "${esc(r.step)}", caption: "${esc(caption)}"${dir} },`;
+    const title = p.title ? `, title: "${esc(p.title)}"` : '';
+    return `  { file: "${esc(r.file)}", project: "${esc(r.project)}", step: "${esc(r.step)}", caption: "${esc(caption)}"${title}${dir} },`;
   }).join('\n');
   return `window.PHOTOS = [\n${rows}\n];\n`;
 }
