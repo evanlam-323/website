@@ -1440,11 +1440,29 @@ function initGoals() {
    In edit mode (#edit) each slot gets a "+" button that opens a picker of the
    personal photos; clicking one fills the slot instantly. */
 const PERSONAL_SLOTS_KEY = 'personalSlots';
+const PERSONAL_ROTATE_MS = 5000;   // how long each photo shows before cross-fading
+// Baked-in picks — deploy-safe and browser-independent. An #edit selection in
+// localStorage[personalSlots] overrides these per-browser; clearing a slot in
+// #edit reverts it to the default here. To change the site's photos for
+// everyone, edit these arrays (filenames live in images/).
+const PERSONAL_DEFAULTS = {
+  hero:  ['IMG_6901.jpg'],
+  about: ['IMG_5021.jpg', 'IMG_6243.jpg', 'IMG_7858.jpg', 'IMG_7737.jpg', 'IMG_4567_Original.jpg'],
+};
 function loadPersonalSlots() {
   try { return JSON.parse(localStorage.getItem(PERSONAL_SLOTS_KEY) || '{}'); }
   catch { return {}; }
 }
 function savePersonalSlots(o) { localStorage.setItem(PERSONAL_SLOTS_KEY, JSON.stringify(o)); }
+
+// A slot's chosen photos, always as an array. Back-compat: an older single
+// string value (one filename) is normalized to a one-element array.
+function slotFilesFor(slotName) {
+  const v = loadPersonalSlots()[slotName];
+  if (Array.isArray(v)) return v.filter(Boolean);
+  if (typeof v === 'string' && v) return [v];
+  return (PERSONAL_DEFAULTS[slotName] || []).slice();
+}
 
 // The personal photos offered in the picker: the "personal" rows from photos.js
 // that are images (skip video clips).
@@ -1455,30 +1473,68 @@ function personalPhotoFiles() {
 }
 
 function renderPersonalSlot(slot) {
-  const chosen = loadPersonalSlots()[slot.dataset.personalSlot];
-  let img = slot.querySelector('.portrait-img');
+  const name = slot.dataset.personalSlot;
   const ph = slot.querySelector('.portrait-ph');
-  if (chosen) {
-    if (!img) {
-      img = document.createElement('img');
-      img.className = 'portrait-img';
-      slot.insertBefore(img, ph || null);
-    }
-    img.src = 'images/' + chosen;
-    img.alt = slot.dataset.personalSlot === 'hero' ? 'Evan Lam' : '';
-    img.style.display = '';
-    img.onerror = () => { img.style.display = 'none'; if (ph) ph.classList.add('show'); };
-    if (ph) ph.classList.remove('show');
-    slot.classList.remove('slot-empty');
-  } else {
-    // No pick yet: hero falls back to its baked images/portrait.jpg; the about
-    // slot has no default, so show its placeholder.
-    if (slot.dataset.personalSlot !== 'hero') {
-      if (img) img.style.display = 'none';
-      if (ph) ph.classList.add('show');
-      slot.classList.add('slot-empty');
-    }
+  let files = slotFilesFor(name);
+  // No pick yet: hero falls back to its baked images/portrait.jpg.
+  if (!files.length && name === 'hero') files = ['portrait.jpg'];
+
+  // Stop any rotation from a previous render before re-laying-out.
+  if (slot._rotTimer) { clearInterval(slot._rotTimer); slot._rotTimer = null; }
+
+  if (!files.length) {
+    // Empty (about slot with no pick): show its placeholder.
+    slot.querySelectorAll('.portrait-img').forEach(i => i.remove());
+    if (ph) ph.classList.add('show');
+    slot.classList.add('slot-empty');
+    return;
   }
+
+  slot.classList.remove('slot-empty');
+  if (ph) ph.classList.remove('show');
+
+  // Two stacked <img> layers so we can cross-fade between photos. A single
+  // photo just uses the front layer (no rotation).
+  let layers = [...slot.querySelectorAll('.portrait-img')];
+  while (layers.length < 2) {
+    const im = document.createElement('img');
+    im.className = 'portrait-img';
+    slot.insertBefore(im, ph || null);
+    layers.push(im);
+  }
+  layers.slice(2).forEach(i => i.remove());      // drop any strays
+  layers = layers.slice(0, 2);
+  const [front, back] = layers;
+
+  front.alt = name === 'hero' ? 'Evan Lam' : '';
+  back.alt = '';
+  back.setAttribute('aria-hidden', 'true');
+  // Reset display — an earlier failed load (e.g. the missing portrait.jpg
+  // fallback) may have hidden a layer; a fresh pick must un-hide it.
+  front.style.display = '';
+  back.style.display = '';
+
+  let idx = 0;
+  front.src = 'images/' + files[0];
+  front.style.opacity = '1';
+  back.style.opacity = '0';
+  front.onerror = () => { front.style.display = 'none'; if (ph) ph.classList.add('show'); };
+  front.onload = () => { front.style.display = ''; if (ph) ph.classList.remove('show'); };
+
+  // One photo, or reduced-motion preference → no rotation.
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (files.length < 2 || reduce) return;
+
+  let showingFront = true;
+  slot._rotTimer = setInterval(() => {
+    idx = (idx + 1) % files.length;
+    const incoming = showingFront ? back : front;
+    const outgoing = showingFront ? front : back;
+    incoming.src = 'images/' + files[idx];
+    incoming.style.opacity = '1';
+    outgoing.style.opacity = '0';
+    showingFront = !showingFront;
+  }, PERSONAL_ROTATE_MS);
 }
 
 function initPersonalSlots() {
@@ -1510,38 +1566,53 @@ function enablePersonalEditing() {
 function openPersonalPicker(slotName) {
   document.querySelector('.personal-picker')?.remove();
   const files = personalPhotoFiles();
+  const selected = new Set(slotFilesFor(slotName));
   const overlay = document.createElement('div');
   overlay.className = 'personal-picker';
   const grid = files.length
-    ? files.map(f => `<button type="button" class="pp-item" data-file="${escHtml(f)}"><img src="images/${escHtml(f)}" loading="lazy" alt="" /></button>`).join('')
+    ? files.map(f => `<button type="button" class="pp-item${selected.has(f) ? ' selected' : ''}" data-file="${escHtml(f)}"><img src="images/${escHtml(f)}" loading="lazy" alt="" /><span class="pp-check" aria-hidden="true">✓</span></button>`).join('')
     : `<p class="pp-empty">No personal photos found in js/photos.js.</p>`;
   overlay.innerHTML = `
-    <div class="pp-panel" role="dialog" aria-label="Pick a personal photo">
-      <div class="pp-head"><h3>Pick a photo</h3><button type="button" class="pp-close" aria-label="Close">✕</button></div>
+    <div class="pp-panel" role="dialog" aria-label="Pick personal photos">
+      <div class="pp-head"><h3>Pick photos</h3><button type="button" class="pp-close" aria-label="Close">✕</button></div>
+      <p class="pp-hint">Tap to select one or more. The box cross-fades between the photos you pick.</p>
       <div class="pp-grid">${grid}</div>
-      <div class="pp-foot"><button type="button" class="pp-clear">Remove photo</button></div>
+      <div class="pp-foot"><span class="pp-count"></span><button type="button" class="pp-clear">Clear all</button><button type="button" class="pp-done">Done</button></div>
     </div>`;
   document.body.appendChild(overlay);
+
+  const applyLive = () => {
+    const map = loadPersonalSlots();
+    const arr = [...selected];
+    if (arr.length) map[slotName] = arr; else delete map[slotName];
+    savePersonalSlots(map);
+    document.querySelectorAll(`[data-personal-slot="${slotName}"]`).forEach(renderPersonalSlot);
+    enablePersonalEditing();
+    const c = overlay.querySelector('.pp-count');
+    if (c) c.textContent = arr.length ? `${arr.length} selected` : '';
+  };
 
   const close = () => overlay.remove();
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   overlay.querySelector('.pp-close').addEventListener('click', close);
-  overlay.querySelector('.pp-clear').addEventListener('click', () => {
-    const map = loadPersonalSlots(); delete map[slotName]; savePersonalSlots(map);
-    document.querySelectorAll(`[data-personal-slot="${slotName}"]`).forEach(renderPersonalSlot);
-    enablePersonalEditing();
+  overlay.querySelector('.pp-done').addEventListener('click', () => {
     close();
-    photoToast('Photo removed — saved to this browser.');
+    photoToast(selected.size ? 'Photos saved to this browser.' : 'Photo removed — saved to this browser.');
+  });
+  overlay.querySelector('.pp-clear').addEventListener('click', () => {
+    selected.clear();
+    overlay.querySelectorAll('.pp-item.selected').forEach(i => i.classList.remove('selected'));
+    applyLive();
   });
   overlay.querySelectorAll('.pp-item').forEach(item => {
     item.addEventListener('click', () => {
-      const map = loadPersonalSlots(); map[slotName] = item.dataset.file; savePersonalSlots(map);
-      document.querySelectorAll(`[data-personal-slot="${slotName}"]`).forEach(renderPersonalSlot);
-      enablePersonalEditing();
-      close();
-      photoToast('Photo set — saved to this browser.');
+      const f = item.dataset.file;
+      if (selected.has(f)) { selected.delete(f); item.classList.remove('selected'); }
+      else { selected.add(f); item.classList.add('selected'); }
+      applyLive();
     });
   });
+  applyLive();   // initialize the "N selected" count
 }
 
 /* ---- boot ---- */

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=22" />
+  <link rel="stylesheet" href="css/style.css?v=25" />
 </head>
 <body data-page="about">
 
@@ -24,9 +24,12 @@
       <div class="hero-portrait about-photo" data-personal-slot="about">
         <span class="corner tl"></span><span class="corner tr"></span>
         <span class="corner bl"></span><span class="corner br"></span>
-        <div class="portrait-ph show">
+        <!-- Baked about photo (first of PERSONAL_DEFAULTS.about in js/main.js). JS cross-fades the full set. Editable in #edit. -->
+        <img class="portrait-img" src="images/IMG_5021.jpg" alt=""
+             onerror="this.style.display='none'; this.nextElementSibling.classList.add('show');" />
+        <div class="portrait-ph">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg>
-          <span>Add a photo — open #edit</span>
+          <span>Add photos — open #edit</span>
         </div>
       </div>
     </div>
@@ -110,7 +113,7 @@
   </main>
 
   <div id="footer-mount"></div>
-  <script src="js/photos.js?v=22"></script>
-  <script src="js/main.js?v=22"></script>
+  <script src="js/photos.js?v=25"></script>
+  <script src="js/main.js?v=25"></script>
 </body>
 </html>
