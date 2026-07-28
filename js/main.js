@@ -371,11 +371,19 @@ function initProcessPile() {
   const DROP = 300; // px of scroll over which a card grows -> shrinks & fades in
 
   const render = () => {
+    // Live editing (#edit) OR reduced-motion: lay the pile out FLAT — every card
+    // at full opacity in its natural position, not the scroll-driven pinned
+    // stack. In the pinned stack only the "front" card is interactive and a
+    // re-render's height change fades the others toward opacity 0; both break
+    // on-page editing (captions un-clickable on back cards; pile "vanishes"
+    // mid-edit). Flat mode makes every card visible and editable.
+    const editing = document.body.classList.contains('editing-captions');
+    const flat = reduce || editing;
     const sy = window.scrollY || window.pageYOffset || 0;
     let front = 0, frontP = -1;                       // the card the viewer perceives as "on top"
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
-      if (reduce) {
+      if (flat) {
         card.style.opacity = 1; card.style.transform = `rotate(${tilts[i]})`; card.style.pointerEvents = 'auto';
         front = i; continue;                          // last card sits on top of the static stack
       }
@@ -393,10 +401,13 @@ function initProcessPile() {
       if (p >= 0.5 || p >= frontP) { front = i; frontP = p; }
     }
     for (let i = 0; i < cards.length; i++) {
-      cards[i].classList.toggle('is-front', i === front);
+      // In edit mode every card is "front" so its back-card lockouts (arrows,
+      // dots, Move buttons, pager slides) are all interactive; otherwise only
+      // the landed card is.
+      cards[i].classList.toggle('is-front', editing || i === front);
       // Only the front card receives clicks; the transparent/behind cards are
       // still stacked on top of things and would otherwise swallow them.
-      if (!reduce) cards[i].style.pointerEvents = i === front ? 'auto' : 'none';
+      if (!flat) cards[i].style.pointerEvents = i === front ? 'auto' : 'none';
     }
   };
 
@@ -599,6 +610,18 @@ function resolveRow(p, moves) {
   return m ? { ...p, project: m.project, step: m.step } : p;
 }
 
+/* Live photo deletes set by the on-page editor (#edit): an array of filenames
+   removed from the layout. Like moves, these are non-destructive — the row is
+   dropped from render + the label sheet, but the underlying file stays on disk.
+   "Reset my edits" (or Undo) brings it back. */
+const DELETES_KEY = 'photoDeletes';
+function loadDeletes() {
+  try { const a = JSON.parse(localStorage.getItem(DELETES_KEY) || '[]'); return new Set(Array.isArray(a) ? a : []); }
+  catch { return new Set(); }
+}
+function saveDeletes(set) { localStorage.setItem(DELETES_KEY, JSON.stringify([...set])); }
+function isDeleted(file) { return loadDeletes().has(file); }
+
 // A file whose name ends in a video extension renders as <video>, not <img>.
 const VIDEO_RE = /\.(mp4|webm|mov|m4v|ogv|ogg)$/i;
 const isVideoFile = f => VIDEO_RE.test(f || '');
@@ -689,7 +712,9 @@ function renderPhotos() {
   if (!project || !Array.isArray(window.PHOTOS)) return;
   const overrides = loadCaptionOverrides();
   const moves = loadPhotoMoves();
-  const rows = window.PHOTOS.map(p => resolveRow(p, moves)).filter(p => p.project === project);
+  const deleted = loadDeletes();
+  const rows = window.PHOTOS.map(p => resolveRow(p, moves))
+    .filter(p => p.project === project && !deleted.has(p.file));
   const find = step => rows.find(p => p.step === step);
 
   // -- Cover --
@@ -915,6 +940,9 @@ function initCaptionEditor() {
     document.body.classList.add('editing-captions');
     buildCaptionToolbar();
     decorateEditing();
+    // Re-flow the process pile flat now that we're editing (its initial layout
+    // ran before this class was set).
+    window.dispatchEvent(new Event('resize'));
   };
 
   if (editingRequested()) enable();
@@ -927,6 +955,7 @@ function initCaptionEditor() {
 function decorateEditing() {
   wireEditableCaptions();
   wireMovers();
+  wireDeleters();
   wireStepAdders();
 }
 
@@ -934,8 +963,9 @@ function decorateEditing() {
 // per-step +/− buttons to know the current count and whether a blank is trailing.
 function stepLayout(project, base) {
   const moves = loadPhotoMoves();
+  const deleted = loadDeletes();
   const group = window.PHOTOS.map(p => resolveRow(p, moves))
-    .filter(p => p.project === project && baseStep(p.step) === base);
+    .filter(p => p.project === project && baseStep(p.step) === base && !deleted.has(p.file));
   return layoutStepSlots(group, reservedFor(project, base));
 }
 
@@ -1040,6 +1070,7 @@ function buildCaptionToolbar() {
       localStorage.removeItem(CAPTION_KEY);
       localStorage.removeItem(MOVES_KEY);
       localStorage.removeItem(PROCSLOTS_KEY);
+      localStorage.removeItem(DELETES_KEY);
       photoToast('Your local edits were cleared. Reloading…');
       setTimeout(() => location.reload(), 700);
     } else if (act === 'done') {
@@ -1115,13 +1146,30 @@ function photoToast(msg) {
   clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+// A toast with an Undo action — used for deletes (longer timeout so there's
+// time to click). Undo runs onUndo() and dismisses.
+function photoToastUndo(msg, onUndo) {
+  let t = document.querySelector('.cap-toast');
+  if (!t) { t = document.createElement('div'); t.className = 'cap-toast'; document.body.appendChild(t); }
+  t.textContent = msg + ' ';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'cap-toast-undo';
+  btn.textContent = 'Undo';
+  btn.addEventListener('click', () => { t.classList.remove('show'); clearTimeout(t._h); onUndo(); });
+  t.appendChild(btn);
+  t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 6000);
+}
+
 // Regenerate the whole window.PHOTOS array with edited captions AND live moves
 // (new project/step) merged in.
 function buildLabelSheetText() {
   const overrides = loadCaptionOverrides();
   const moves = loadPhotoMoves();
+  const deleted = loadDeletes();
   const esc = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  const rows = window.PHOTOS.map(p => {
+  const rows = window.PHOTOS.filter(p => !deleted.has(p.file)).map(p => {
     const r = resolveRow(p, moves);
     const caption = overrides[p.file] != null ? overrides[p.file] : p.caption;
     const dir = p.dir ? `, dir: "${esc(p.dir)}"` : '';
@@ -1151,6 +1199,40 @@ function wireMovers() {
     btn.title = 'Move this photo to another project / slot';
     btn.addEventListener('click', ev => { ev.stopPropagation(); ev.preventDefault(); openMoveMenu(host, btn); });
     host.appendChild(btn);
+  });
+}
+
+/* ---- On-page photo delete (#edit) ----
+   In edit mode each managed photo/video gets a 🗑 button. Deleting is
+   non-destructive: the file is recorded in localStorage[photoDeletes] and
+   dropped from the layout + the label sheet, but the file itself stays on disk.
+   A toast offers Undo, and "Reset my edits" brings everything back. */
+function wireDeleters() {
+  const managed = new Set((window.PHOTOS || []).map(p => p.file));
+  document.querySelectorAll('[data-file]').forEach(host => {
+    if (!managed.has(host.dataset.file)) return;
+    if ([...host.children].some(c => c.classList && c.classList.contains('photo-del-btn'))) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'photo-del-btn';
+    btn.textContent = '🗑';
+    btn.title = 'Remove this photo/video from the site';
+    btn.setAttribute('aria-label', 'Remove this photo or video from the site');
+    btn.addEventListener('click', ev => { ev.stopPropagation(); ev.preventDefault(); deletePhoto(host.dataset.file); });
+    host.appendChild(btn);
+  });
+}
+
+function deletePhoto(file) {
+  const set = loadDeletes();
+  set.add(file);
+  saveDeletes(set);
+  closeMoveMenu();
+  rerenderPhotos();
+  photoToastUndo(`Removed ${shortFile(file)}.`, () => {
+    const s = loadDeletes(); s.delete(file); saveDeletes(s);
+    rerenderPhotos();
+    photoToast('Restored.');
   });
 }
 
@@ -1190,7 +1272,9 @@ function processStepsFor(project) {
 // "this photo" and stay selected.
 function slotOptionsHTML(project, curStep, curFile) {
   const moves = loadPhotoMoves();
-  const placed = (window.PHOTOS || []).map(p => resolveRow(p, moves)).filter(p => p.project === project);
+  const deleted = loadDeletes();
+  const placed = (window.PHOTOS || []).map(p => resolveRow(p, moves))
+    .filter(p => p.project === project && !deleted.has(p.file));
   const selAttr = v => v === curStep ? ' selected' : '';
   let html = `<optgroup label="Cover"><option value="cover"${selAttr('cover')}>cover</option></optgroup>`;
 

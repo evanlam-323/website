@@ -32,7 +32,7 @@ window.PHOTOS = [
   { file: "IMG_5303.jpg", project: "rose-arm", step: "process-1", caption: "" },
   { file: "IMG_5320.jpg", project: "rose-arm", step: "process-2", caption: "" },
   { file: "IMG_5645.jpg", project: "rose-arm", step: "process-3", caption: "" },
-  { file: "IMG_5646.jpg", project: "rose-arm", step: "process-3", caption: "" },
+  { file: "IMG_5646.jpg", project: "rose-arm", step: "cover", caption: "" },
   { file: "IMG_6553.jpg", project: "rose-arm", step: "process-4", caption: "" },
   { file: "76216844423__2135E1AA-599D-4CDA-8B65-0733BA856E86.jpg", project: "rose-arm", step: "gallery", caption: "" },
   { file: "IMG_2431.jpg", project: "rose-arm", step: "gallery", caption: "" },
@@ -102,5 +102,21 @@ window.PHOTOS = [
   { file: "IMG_7858.jpg", project: "personal", step: "gallery", caption: "" },
   { file: "IMG_4567_Original.jpg", project: "personal", step: "portrait", caption: "" },
   { file: "IMG_7737.jpg", project: "personal", step: "portrait", caption: "" },
+
+  /* ---- Video clips (live in videos/<project>/, carry a `dir`) ---- */
+  { file: "20260208_011807-clip.webm", project: "rose-arm", step: "process-2.1", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_1775-clip.webm", project: "rose-arm", step: "gallery", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_2778-clip.webm", project: "rose-arm", step: "gallery", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_2956-clip.webm", project: "rose-arm", step: "gallery", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5155-clip.webm", project: "rose-arm", step: "process-4.0", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5319-clip.webm", project: "rose-arm", step: "gallery", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5566-clip.webm", project: "rose-arm", step: "process-3.2", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5576-clip.webm", project: "rose-arm", step: "process-3.3", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5587-clip.webm", project: "rose-arm", step: "process-3.4", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5607-clip.webm", project: "rose-arm", step: "process-3.5", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5632-clip.webm", project: "rose-arm", step: "process-4.1", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_5684-clip.webm", project: "rose-arm", step: "process-5.1", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_6178-clip.webm", project: "rose-arm", step: "process-3.0", caption: "", dir: "videos/rose-arm" },
+  { file: "IMG_6673-clip.webm", project: "rose-arm", step: "process-5.0", caption: "Using the arm to flip switches for the Equipment Servicing Mission", dir: "videos/rose-arm" },
 
 ];

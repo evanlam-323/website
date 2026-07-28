@@ -62,21 +62,25 @@ Turns long clips into short web-ready ones. Pure `<video>` + `<canvas>` + `Media
 - **Insert → saves into `videos/<project>/`** (rewired this session; no longer touches `images/`/`photos.js`). Order: (1) **POST to `serve.py`** `/upload/<project>` — fully automatic, no download/no picking; (2) File System Access `videosDir` write if a site folder is connected; (3) plain **download** fallback (then drop it into `videos/<project>/` yourself). Status pill shows **⚡ auto-save ON → videos/** when `serve.py` is detected. Insert only marks a source ✓ when a write actually landed (honest counter).
 
 ## ⭐ Live caption editor + on-page photo/video mover (`#edit` mode)
-Add `#edit` to any project-page URL. `initCaptionEditor()` builds the toolbar. **Captions:** every `[data-cap]` is contenteditable, saved to `localStorage[photoCaptions]`. **Mover:** every managed `[data-file]` (incl. injected folder videos) gets a **⤢ Move** popover → new project + slot; `applyMove()` writes `localStorage[photoMoves]` then `rerenderPhotos()` live. **Sub-slots + per-step `+`:** `process-N.k` numbering, `localStorage[processSlots]` reserves empties. Toolbar: **Copy label sheet** (regenerates `window.PHOTOS` with captions + moves + `dir` merged — paste over `js/photos.js`), **Reset my edits**, **Done**.
+Add `#edit` to any project-page URL. `initCaptionEditor()` builds the toolbar. **Captions:** every `[data-cap]` is contenteditable, saved to `localStorage[photoCaptions]`. **Mover:** every managed `[data-file]` (incl. injected folder videos) gets a **⤢ Move** popover → new project + slot; `applyMove()` writes `localStorage[photoMoves]` then `rerenderPhotos()` live. **Delete (NEW):** every managed `[data-file]` also gets a **🗑** button (top-left); `deletePhoto()` adds the file to `localStorage[photoDeletes]` (a plain array) and drops it from render + the label sheet — **non-destructive** (the file stays in `images/`/`videos/`). Undo via the toast (6 s) or **Reset my edits**. `photoDeletes` is filtered in `renderPhotos`, `stepLayout`, `slotOptionsHTML`, and `buildLabelSheetText`. **Sub-slots + per-step `+`:** `process-N.k` numbering, `localStorage[processSlots]` reserves empties. Toolbar: **Copy label sheet** (regenerates `window.PHOTOS` with captions + moves + `dir` merged, deletes omitted — paste over `js/photos.js`), **Reset my edits** (clears captions/moves/procSlots/deletes), **Done**.
+
+**Flat pile in edit mode (NEW — bugfix).** The process section is a scroll-driven pinned card stack (`initProcessPile`): only the "front" card is interactive and card opacity tracks scroll. That broke editing — captions/Move on back cards were `pointer-events:none`, and a re-render that changed a card's height shifted doc positions enough to fade the whole pile to `opacity:0` ("all 5 cards vanish"). Fix: in `#edit`, `initProcessPile`'s `render()` lays the pile out **flat** (`flat = reduce || editing`): every card `opacity:1`, natural position, all marked `.is-front` (so the `:not(.is-front)` lockouts don't fire). CSS `body.editing-captions .pile-card { position:relative; top:auto!important; opacity:1!important; }` unpins it into a plain vertical list. `enable()` fires a `resize` so the pile re-flows the moment edit mode turns on. Public (non-edit) view is unchanged — still the pinned scroll-stack.
+
+**Per-photo captions now show publicly (NEW).** `.card-photo-cap` was `display:none` off `#edit` (author saw captions only while editing). Now `display:block` with `.card-photo-cap:empty { display:none }` — a written caption shows on the live site, a blank one adds no clutter. The step's `<p class="card-desc">` (hardcoded per step) is separate and always showed; don't confuse the two.
 
 ## Key JS entry points (`js/main.js`, all in the `DOMContentLoaded` boot block)
 `injectLayout · initScrollHeader · initDropdowns · initReveal · initFilters · initWorkFilters · initPhotos · initGallery · initModelViewer · initProcessPile · initCardPagers · initCaptionEditor · initVideoFolder`.
 New this session: **`mediaSrc`** (images/ vs videos/ path routing), **`initVideoFolder`** (auto-scan `videos/<project>/`), `dir` support threaded through `setSlotMedia`/`buildGalleryItem`/`buildProcessPager`/lightbox + `buildLabelSheetText`.
 
 ## Git state
-- **HEAD before this session:** `aa44b7b` "Live editor: process sub-slots, dynamic Move menu, per-step +/-".
-- **This commit adds:**
-  - `js/main.js` — `videos/` folder auto-scan (`initVideoFolder`), `mediaSrc()` path routing, `dir` in the label sheet.
-  - `video-trimmer.html` — export hardening (play-guard + stall watchdog), default-project dropdown, honest insert status, and **Insert rewired to save into `videos/<project>/`** (serve.py upload → FS-Access → download).
-  - `serve.py` — **new** static + upload server.
-  - `videos/` — **new** per-project folders (+ README) and 2 placed clips.
-  - `*.html` — cache-busters bumped to `?v=17`.
-  - `js/photos.js` — unchanged vs HEAD (a stray trimmer-inserted row was cleaned back out).
+- **Latest session (editor bugfixes + delete + saved photos):**
+  - `js/main.js` — flat pile in `#edit` (`initProcessPile.render()` `flat` branch + `enable()` resize), photo **delete** feature (`photoDeletes`, `wireDeleters`/`deletePhoto`/`photoToastUndo`, filtered in render/stepLayout/slotOptionsHTML/label sheet), reset clears `photoDeletes`.
+  - `css/style.css` — `body.editing-captions .pile-card` flat layout; `.card-photo-cap` visible when non-empty (`:empty` hidden); `.photo-del-btn` + `.cap-toast-undo` styles.
+  - `js/photos.js` — **user's saved arrangement** baked from their label sheet: `IMG_5646.jpg`→cover, 14 rose-arm `-clip.webm` rows placed into process sub-slots (3.0–3.5, 4.0/4.1, 5.0/5.1, 2.1), caption on `IMG_6673-clip.webm`.
+  - `videos/rose-arm/` — 13 new clips added (were untracked) + `IMG_5566-clip.webm` re-exported.
+  - `*.html` — cache-busters bumped to `?v=20`.
+  - Other `videos/<project>/` untracked clips (kealakehe/mini-bridge/soma-pump/stair-robot/steel-bridge/uh88-weather) are **not** referenced by `photos.js` yet — left for a future placement pass.
+- **Prior session (`aa44b7b` → previous commit):** `videos/` folder auto-scan (`initVideoFolder`), `mediaSrc()` path routing, `dir` in label sheet, trimmer server-side ffmpeg export, `serve.py`.
 - **`origin/personal-hero` is behind** — confirm with the user before `git push`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
@@ -86,9 +90,10 @@ Verified live under `serve.py`: `videos/<project>/` auto-scan injects + renders 
 ## Open decisions / TODO for next session
 1. **More videos:** trim the good clips from `drive-videos/` in a **visible Chrome tab** (serve.py running), Insert → they land in `videos/<project>/`.
 2. ~~**Optional durable export:** install ffmpeg + add `/trim` to `serve.py`.~~ **✅ DONE** — ffmpeg installed (`winget Gyan.FFmpeg` 8.1.2), `serve.py` `/trim` endpoint added, Export rewired to use it (recorder kept as fallback). Verified end-to-end incl. HEVC `.mov` and inside the Claude pane.
-3. **Covers:** no project has a `cover` photo/video — banners are empty. Promote one per project.
+3. **Covers:** rose-arm now has a cover (`IMG_5646.jpg`); the other projects still have empty banners — promote one each.
 4. **Personal photos have no home:** `personal` rows sit in `photos.js` but nothing renders `data-project="personal"`.
-5. **Captions:** placed photos have blank captions — fill via `#edit`.
-6. **Cache-busters** at `?v=18` — bump on the next CSS/JS edit (or rely on serve.py no-store locally).
-7. Consider **GitHub Pages** for a live URL (remember to bake folder videos into `photos.js` first — see videos/ section).
-8. Update **PHOTOS.md** (user-facing how-to) to document the `videos/` folder + serve.py auto-save flow.
+5. **Captions:** most placed photos still have blank captions — fill via `#edit` (they now show on the live site, so it's worth doing). rose-arm's competition clip has one.
+6. **More video placement:** the non-rose-arm `videos/<project>/` clips are on disk but unplaced — open each project `#edit`, Move them into slots, Copy label sheet, paste over `photos.js`.
+7. **Cache-busters** at `?v=20` — bump on the next CSS/JS edit (or rely on serve.py no-store locally).
+8. Consider **GitHub Pages** for a live URL (remember to bake folder videos into `photos.js` first — see videos/ section).
+9. Update **PHOTOS.md** (user-facing how-to) to document the `videos/` folder + serve.py auto-save flow, the 🗑 delete button, and that captions now show publicly.
