@@ -18,15 +18,15 @@ Context for another chat/session to continue the work. Delete this file when don
 - **`.brand` CSS class** (`text-transform: none`) preserves mixed-case names like **RoSE** / **SoMa**. Wrap just the brand word: `Team <span class="brand">RoSE</span>`.
 - **`.reveal`** = fade-in-on-scroll (IntersectionObserver in main.js).
 - **Theme:** near-black `--bg: #0b0b0c`, industrial red-orange `--accent: #ea4a2a`. Panels `--bg-2: #0f0f11`, `--panel: #141416`. Change `--accent` to re-theme everything.
-- **✅ Cache-busting — currently `?v=18`.** Every page links shared assets with a version query — `css/style.css?v=18`, `js/main.js?v=18`, `js/photos.js?v=18`. **After editing CSS or JS you MUST bump the number on ALL html files** so browsers load the new file:
+- **✅ Cache-busting — currently `?v=22`.** Every page links shared assets with a version query — `css/style.css?v=22`, `js/main.js?v=22`, `js/photos.js?v=22`. **After editing CSS or JS you MUST bump the number on ALL html files** so browsers load the new file:
   ```bash
-  # from project root — bump v=18 to v=19 everywhere
-  sed -i 's/?v=18/?v=19/g' *.html
+  # from project root — bump v=22 to v=23 everywhere
+  sed -i 's/?v=22/?v=23/g' *.html
   ```
   ⚠️ Only matters under plain `http.server` (browser caches by URL). **`serve.py` sends everything `Cache-Control: no-store`, so locally it always serves fresh** — but still bump for correctness before committing/deploying.
 
 ## Pages
-- `index.html` — hero + **Work grid** with a multi-select discipline filter. `research.html`, `about.html`.
+- `index.html` — hero (portrait is now an editable **personal photo slot**) + **Work grid** with a multi-select discipline filter. `research.html`. `about.html` — hero now two-column (intro left, **editable photo slot** right); the old **Timeline was replaced by a Goals checklist**.
 - Seven project detail pages: `project-uh88-weather.html`, `project-rose-arm.html`, `project-mini-bridge.html`, `project-steel-bridge.html`, `project-soma-pump.html`, `project-stair-robot.html`, `project-kealakehe.html`.
 - `video-trimmer.html` — **author-only tool** (see below), not linked from the public site.
 
@@ -68,12 +68,28 @@ Add `#edit` to any project-page URL. `initCaptionEditor()` builds the toolbar. *
 
 **Per-photo captions now show publicly (NEW).** `.card-photo-cap` was `display:none` off `#edit` (author saw captions only while editing). Now `display:block` with `.card-photo-cap:empty { display:none }` — a written caption shows on the live site, a blank one adds no clutter. The step's `<p class="card-desc">` (hardcoded per step) is separate and always showed; don't confuse the two.
 
+## ⭐ Personal photo slots + Goals checklist (NEW this session — index & about)
+The hero portrait and a new about-page photo box are **editable personal photo slots**, driven by `initPersonalSlots()` in main.js. This gave the `personal` photo rows a home for the first time (was TODO #4).
+- **Markup:** any element with **`data-personal-slot="hero|about"`**. `index.html`'s `.hero-portrait` is the `hero` slot; `about.html`'s hero-right `.hero-portrait.about-photo` is the `about` slot. **Both pages now load `js/photos.js`** (they didn't before) so the personal set is available.
+- **Picker (`#edit` only):** `enablePersonalEditing()` adds a **`+` button** (`.personal-add-btn`) to each slot — small top-right when filled, big centered when empty. Click → `openPersonalPicker()` overlay (`.personal-picker`) showing every image row where `project==='personal'` (`personalPhotoFiles()`, videos skipped) as a thumbnail grid + **Remove photo**. Pick one → assigns instantly.
+- **State:** choices save to **`localStorage[personalSlots]`** = `{hero, about}` (filename in `images/`), re-rendered by `renderPersonalSlot()`. Consistent with the rest of the editor (localStorage until baked). **Not yet in the label sheet / `photos.js`** — so they're per-browser only; to make a pick permanent, hard-set the file in code (ask the user which). Hero with no pick falls back to its baked `images/portrait.jpg`; about with no pick shows a placeholder.
+- **Goals checklist (`about.html`):** replaced the old `.timeline`. `<ul class="goals" data-goals>` with 8 **placeholder** goals (`.goal-item` + hidden checkbox + styled `.goal-box`). `initGoals()` remembers checked state in **`localStorage[aboutGoals]`** (indexed array). User will rewrite the 8 goal texts later.
+- **Edit-mode reach:** `initPersonalSlots`/`initGoals` run on **every** page (not gated on `data-project` like `initCaptionEditor`), so `#edit` now does something on index & about too. The full caption/move/delete toolbar is still project-pages-only.
+
 ## Key JS entry points (`js/main.js`, all in the `DOMContentLoaded` boot block)
-`injectLayout · initScrollHeader · initDropdowns · initReveal · initFilters · initWorkFilters · initPhotos · initGallery · initModelViewer · initProcessPile · initCardPagers · initCaptionEditor · initVideoFolder`.
-New this session: **`mediaSrc`** (images/ vs videos/ path routing), **`initVideoFolder`** (auto-scan `videos/<project>/`), `dir` support threaded through `setSlotMedia`/`buildGalleryItem`/`buildProcessPager`/lightbox + `buildLabelSheetText`.
+`injectLayout · initScrollHeader · initDropdowns · initReveal · initFilters · initWorkFilters · initPhotos · initGallery · initModelViewer · initProcessPile · initCardPagers · initCaptionEditor · initVideoFolder · initGoals · initPersonalSlots`.
+Prior session: **`mediaSrc`** (images/ vs videos/ path routing), **`initVideoFolder`** (auto-scan `videos/<project>/`), `dir` support threaded through `setSlotMedia`/`buildGalleryItem`/`buildProcessPager`/lightbox + `buildLabelSheetText`.
+This session: **`initPersonalSlots`/`renderPersonalSlot`/`enablePersonalEditing`/`openPersonalPicker`/`personalPhotoFiles`** (personal slots) and **`initGoals`** (about goals).
 
 ## Git state
-- **Latest session (editor bugfixes + delete + saved photos):**
+- **Latest session (`d7118f9` — personal photo slots + goals + rover covers):**
+  - `js/main.js` — `initPersonalSlots` + picker + `initGoals` (see section above), both added to boot.
+  - `css/style.css` — `.about-hero` two-column hero, `.about-photo`, `.personal-add-btn`, `.personal-picker` overlay, `.goals`/`.goal-item`/`.goal-box` checklist, `a[href="project-rose-arm.html"] .thumb-img` + `[data-project="rose-arm"] .project-cover img` right-biased `object-position: 72%`.
+  - `js/photos.js` — steel-bridge gallery gains `steel-bridge-team.jpg`; rose-arm **cover swapped to `IMG_7334.jpg`** (the URC rover), old `IMG_5646.jpg` demoted to gallery.
+  - `index.html` — hero portrait is `data-personal-slot="hero"`; loads `js/photos.js`. `about.html` — two-column hero with `about` slot, Timeline→Goals; loads `js/photos.js`.
+  - New images: `images/IMG_7334.jpg` (rover), `images/rose-arm.jpg` (= rover, homepage thumb), `images/steel-bridge-team.jpg` (welding team).
+  - `*.html` cache-busters bumped `?v=20`→`?v=22` (two bumps within the session).
+- **Prior session (editor bugfixes + delete + saved photos):**
   - `js/main.js` — flat pile in `#edit` (`initProcessPile.render()` `flat` branch + `enable()` resize), photo **delete** feature (`photoDeletes`, `wireDeleters`/`deletePhoto`/`photoToastUndo`, filtered in render/stepLayout/slotOptionsHTML/label sheet), reset clears `photoDeletes`.
   - `css/style.css` — `body.editing-captions .pile-card` flat layout; `.card-photo-cap` visible when non-empty (`:empty` hidden); `.photo-del-btn` + `.cap-toast-undo` styles.
   - `js/photos.js` — **user's saved arrangement** baked from their label sheet: `IMG_5646.jpg`→cover, 14 rose-arm `-clip.webm` rows placed into process sub-slots (3.0–3.5, 4.0/4.1, 5.0/5.1, 2.1), caption on `IMG_6673-clip.webm`.
@@ -90,10 +106,11 @@ Verified live under `serve.py`: `videos/<project>/` auto-scan injects + renders 
 ## Open decisions / TODO for next session
 1. **More videos:** trim the good clips from `drive-videos/` in a **visible Chrome tab** (serve.py running), Insert → they land in `videos/<project>/`.
 2. ~~**Optional durable export:** install ffmpeg + add `/trim` to `serve.py`.~~ **✅ DONE** — ffmpeg installed (`winget Gyan.FFmpeg` 8.1.2), `serve.py` `/trim` endpoint added, Export rewired to use it (recorder kept as fallback). Verified end-to-end incl. HEVC `.mov` and inside the Claude pane.
-3. **Covers:** rose-arm now has a cover (`IMG_5646.jpg`); the other projects still have empty banners — promote one each.
-4. **Personal photos have no home:** `personal` rows sit in `photos.js` but nothing renders `data-project="personal"`.
+3. **Covers:** rose-arm cover is now the URC rover (`IMG_7334.jpg`) and steel-bridge has a gallery photo; the **other projects still have empty banners** — promote one each.
+4. ~~**Personal photos have no home.**~~ **✅ DONE** — hero + about photo slots pick from the `personal` set in `#edit` (see Personal photo slots section). **Follow-up:** the picks are `localStorage`-only; bake the chosen hero/about files into code once the user settles on them, and consider baking them into `photos.js` (steps `hero`/`about`) so they round-trip via the label sheet.
+   - **Goals:** the 8 about-page goals are placeholders — user will supply real ones (edit `about.html` `data-goals` list). Checked state is per-browser.
 5. **Captions:** most placed photos still have blank captions — fill via `#edit` (they now show on the live site, so it's worth doing). rose-arm's competition clip has one.
 6. **More video placement:** the non-rose-arm `videos/<project>/` clips are on disk but unplaced — open each project `#edit`, Move them into slots, Copy label sheet, paste over `photos.js`.
-7. **Cache-busters** at `?v=20` — bump on the next CSS/JS edit (or rely on serve.py no-store locally).
+7. **Cache-busters** at `?v=22` — bump on the next CSS/JS edit (or rely on serve.py no-store locally).
 8. Consider **GitHub Pages** for a live URL (remember to bake folder videos into `photos.js` first — see videos/ section).
 9. Update **PHOTOS.md** (user-facing how-to) to document the `videos/` folder + serve.py auto-save flow, the 🗑 delete button, and that captions now show publicly.
