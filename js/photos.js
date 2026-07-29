@@ -125,5 +125,8 @@ window.PHOTOS = [
   { file: "IMG_2520-clip.webm", project: "steel-bridge", step: "process-2.0", caption: "", dir: "videos/steel-bridge" },
   { file: "IMG_2493-clip.webm", project: "steel-bridge", step: "process-2.1", caption: "", dir: "videos/steel-bridge" },
   { file: "IMG_2828-clip.webm", project: "steel-bridge", step: "gallery", caption: "", dir: "videos/steel-bridge" },
+  { file: "IMG_9669-clip.webm", project: "kealakehe", step: "process-3.0", caption: "", dir: "videos/kealakehe" },
+  { file: "IMG_9710-clip.webm", project: "kealakehe", step: "process-5.0", caption: "", dir: "videos/kealakehe" },
+  { file: "IMG_9732-clip.webm", project: "kealakehe", step: "process-5.1", caption: "", dir: "videos/kealakehe" },
 
 ];

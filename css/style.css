@@ -1224,6 +1224,22 @@ body.editing-captions .pile-card {
   content: "click to add a caption"; opacity: .55; font-style: italic;
 }
 
+/* editable process-card headings (#edit) — same dashed affordance as captions */
+.editing-captions .title-editable {
+  outline: 1px dashed var(--accent); outline-offset: 3px; cursor: text; border-radius: 2px;
+  transition: background .15s ease;
+}
+.editing-captions .title-editable:hover { background: rgba(234,74,42,.08); }
+.editing-captions .title-editable:focus { outline-style: solid; background: rgba(234,74,42,.12); }
+
+/* editable process-card descriptions (#edit) — same dashed affordance */
+.editing-captions .desc-editable {
+  outline: 1px dashed var(--accent); outline-offset: 3px; cursor: text; border-radius: 2px;
+  transition: background .15s ease;
+}
+.editing-captions .desc-editable:hover { background: rgba(234,74,42,.08); }
+.editing-captions .desc-editable:focus { outline-style: solid; background: rgba(234,74,42,.12); }
+
 .cap-toolbar {
   position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 250;
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;

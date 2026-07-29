@@ -607,6 +607,33 @@ function captionFor(entry, overrides) {
   return (o != null ? o : entry.caption) || '';
 }
 
+/* Live header overrides set by the on-page title editor (#edit): { file: title }.
+   Mirrors captions — a process card's heading ("Game Analysis", …) can be edited
+   in place and is stored per-file until baked in with "Copy label sheet". */
+const TITLE_KEY = 'photoTitles';
+function loadTitleOverrides() {
+  try { return JSON.parse(localStorage.getItem(TITLE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function titleFor(entry, overrides) {
+  const o = overrides && overrides[entry.file];
+  return (o != null ? o : entry.title) || '';
+}
+
+/* Live description overrides set by the on-page editor (#edit): { file: text }.
+   The paragraph under a process card's photo (its step write-up) can be edited in
+   place and is stored per-file in localStorage[photoDescs] until baked into the
+   label sheet as the row's `desc`. */
+const DESC_KEY = 'photoDescs';
+function loadDescOverrides() {
+  try { return JSON.parse(localStorage.getItem(DESC_KEY) || '{}'); }
+  catch { return {}; }
+}
+function descFor(entry, overrides) {
+  const o = overrides && overrides[entry.file];
+  return (o != null ? o : entry.desc) || '';
+}
+
 /* Live photo moves set by the on-page mover (#edit): { file: {project, step} }.
    These override a row's slot without touching js/photos.js until you "Copy
    label sheet". */
@@ -722,6 +749,8 @@ function renderPhotos() {
   const project = document.body.dataset.project;
   if (!project || !Array.isArray(window.PHOTOS)) return;
   const overrides = loadCaptionOverrides();
+  const titleOverrides = loadTitleOverrides();
+  const descOverrides = loadDescOverrides();
   const moves = loadPhotoMoves();
   const deleted = loadDeletes();
   const rows = window.PHOTOS.map(p => resolveRow(p, moves))
@@ -761,6 +790,7 @@ function renderPhotos() {
     if (arr.length <= 1) {
       const media = slot.querySelector('.card-media, .step-media') || slot;
       const cap = slot.querySelector('.card-photo-cap');
+      const head = slot.querySelector('.card-head h4');
       const entry = arr[0] || null;
       if (!entry) {
         if (media && media.classList) media.classList.add('is-empty');
@@ -769,10 +799,16 @@ function renderPhotos() {
         slot.dataset.file = entry.file;
         setSlotMedia(media, entry, overrides);
         if (cap) cap.textContent = captionFor(entry, overrides);
+        // Apply an edited/authored heading, if any; otherwise keep the card's
+        // hand-written default (restored from the template above).
+        if (head) { const t = titleFor(entry, titleOverrides); if (t) head.textContent = t; }
+        // Same for the step's description paragraph (the plain <p>, not the caption).
+        const descP = [...slot.querySelectorAll(':scope > p')].find(p => !p.classList.contains('card-photo-cap'));
+        if (descP) { const d = descFor(entry, descOverrides); if (d) descP.textContent = d; }
       }
       return;
     }
-    buildProcessPager(slot, arr, overrides);
+    buildProcessPager(slot, arr, overrides, titleOverrides, descOverrides);
   });
 
   // -- Gallery (built from every "gallery" row) --
@@ -860,7 +896,7 @@ function buildGalleryItem(entry, overrides) {
    can hold several photos/videos. Each becomes its own grey card (keeping the
    step's number, title and description) that sweeps in on arrow/dot paging.
    initCardPagers() — which runs after this — wires up the sweep animation. */
-function buildProcessPager(slot, entries, overrides) {
+function buildProcessPager(slot, entries, overrides, titleOverrides, descOverrides) {
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -872,7 +908,8 @@ function buildProcessPager(slot, entries, overrides) {
   // Each slide can carry its own title (e.g. mini-bridge's per-photo headings);
   // fall back to the step's shared title when a photo row has none.
   const headFor = (sub, entry) => {
-    const t = (entry && entry.title) ? `<h4>${esc(entry.title)}</h4>` : titleHTML;
+    const et = entry && titleFor(entry, titleOverrides);
+    const t = et ? `<h4>${esc(et)}</h4>` : titleHTML;
     return `<div class="card-head"><span class="card-num">${esc(sub)}</span>${t}</div>`;
   };
   // The step's written description is the plain <p> that isn't the photo caption.
@@ -910,7 +947,7 @@ function buildProcessPager(slot, entries, overrides) {
           <div class="media-ph">${phSvg}<span>${esc(sub)}</span></div>
         </div>
         <p class="card-photo-cap" data-cap>${esc(cap)}</p>
-        ${descHTML ? `<p class="card-desc">${descHTML}</p>` : ''}
+        ${(() => { const d = descFor(entry, descOverrides); const body = d ? esc(d) : descHTML; return body ? `<p class="card-desc">${body}</p>` : ''; })()}
       </div>`;
   }).join('');
 
@@ -965,6 +1002,8 @@ function initCaptionEditor() {
 // photo/video host: an editable caption, a "Move" button, and a per-step "+".
 function decorateEditing() {
   wireEditableCaptions();
+  wireEditableTitles();
+  wireEditableDescs();
   wireMovers();
   wireDeleters();
   wireStepAdders();
@@ -1056,6 +1095,71 @@ function wireEditableCaptions() {
   });
 }
 
+/* Make each process card's heading (the .card-head <h4>) editable in #edit,
+   just like captions. The edit is stored per-file in localStorage[photoTitles]
+   and baked into the label sheet as the row's `title`. Only headings on a card/
+   slide that holds a photo (closest [data-file]) are wired — an empty step has
+   no row to save the title against. */
+function wireEditableTitles() {
+  document.querySelectorAll('.card-head h4').forEach(el => {
+    if (el.classList.contains('title-editable')) return;   // idempotent
+    const host = el.closest('[data-file]');
+    if (!host) return;                                     // no photo -> nothing to key on
+    el.setAttribute('contenteditable', 'true');
+    el.setAttribute('spellcheck', 'true');
+    el.classList.add('title-editable');
+    el.title = 'Edit this step heading';
+    el.addEventListener('input', () => {
+      const h = el.closest('[data-file]');
+      if (!h) return;
+      const text = el.textContent.replace(/\s+/g, ' ').trim();
+      const ov = loadTitleOverrides();
+      ov[h.dataset.file] = text;
+      localStorage.setItem(TITLE_KEY, JSON.stringify(ov));
+    });
+    // Enter commits instead of adding a newline.
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+  });
+}
+
+/* Make each process step's description paragraph editable in #edit. Like the
+   heading, the edit is stored per-file in localStorage[photoDescs] and baked into
+   the label sheet as the row's `desc`. The description is the plain <p> under the
+   photo — a pager slide's `.card-desc`, or a single-photo card's non-caption <p>.
+   Only paragraphs on a card/slide holding a photo (closest [data-file]) wire up. */
+function wireEditableDescs() {
+  const paras = [];
+  document.querySelectorAll('.pager-slide[data-file] .card-desc').forEach(p => paras.push(p));
+  document.querySelectorAll('[data-slot][data-file]').forEach(slot => {
+    if (slot.querySelector('.card-pager')) return;   // pager slides handled above
+    const p = [...slot.querySelectorAll(':scope > p')].find(x => !x.classList.contains('card-photo-cap'));
+    if (p) paras.push(p);
+  });
+  paras.forEach(el => {
+    if (el.classList.contains('desc-editable')) return;   // idempotent
+    const host = el.closest('[data-file]');
+    if (!host) return;
+    el.setAttribute('contenteditable', 'true');
+    el.setAttribute('spellcheck', 'true');
+    el.classList.add('desc-editable');
+    el.title = 'Edit this step description';
+    el.addEventListener('input', () => {
+      const h = el.closest('[data-file]');
+      if (!h) return;
+      const text = el.textContent.replace(/\s+/g, ' ').trim();
+      const ov = loadDescOverrides();
+      ov[h.dataset.file] = text;
+      localStorage.setItem(DESC_KEY, JSON.stringify(ov));
+    });
+    // Enter commits instead of adding a newline.
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+  });
+}
+
 function buildCaptionToolbar() {
   const bar = document.createElement('div');
   bar.className = 'cap-toolbar';
@@ -1079,6 +1183,8 @@ function buildCaptionToolbar() {
     } else if (act === 'reset') {
       // Clear caption edits, photo moves, and reserved empty slots.
       localStorage.removeItem(CAPTION_KEY);
+      localStorage.removeItem(TITLE_KEY);
+      localStorage.removeItem(DESC_KEY);
       localStorage.removeItem(MOVES_KEY);
       localStorage.removeItem(PROCSLOTS_KEY);
       localStorage.removeItem(DELETES_KEY);
@@ -1177,15 +1283,20 @@ function photoToastUndo(msg, onUndo) {
 // (new project/step) merged in.
 function buildLabelSheetText() {
   const overrides = loadCaptionOverrides();
+  const titleOverrides = loadTitleOverrides();
+  const descOverrides = loadDescOverrides();
   const moves = loadPhotoMoves();
   const deleted = loadDeletes();
   const esc = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   const rows = window.PHOTOS.filter(p => !deleted.has(p.file)).map(p => {
     const r = resolveRow(p, moves);
     const caption = overrides[p.file] != null ? overrides[p.file] : p.caption;
+    const titleVal = titleOverrides[p.file] != null ? titleOverrides[p.file] : p.title;
+    const descVal = descOverrides[p.file] != null ? descOverrides[p.file] : p.desc;
     const dir = p.dir ? `, dir: "${esc(p.dir)}"` : '';
-    const title = p.title ? `, title: "${esc(p.title)}"` : '';
-    return `  { file: "${esc(r.file)}", project: "${esc(r.project)}", step: "${esc(r.step)}", caption: "${esc(caption)}"${title}${dir} },`;
+    const title = titleVal ? `, title: "${esc(titleVal)}"` : '';
+    const desc = descVal ? `, desc: "${esc(descVal)}"` : '';
+    return `  { file: "${esc(r.file)}", project: "${esc(r.project)}", step: "${esc(r.step)}", caption: "${esc(caption)}"${title}${desc}${dir} },`;
   }).join('\n');
   return `window.PHOTOS = [\n${rows}\n];\n`;
 }
