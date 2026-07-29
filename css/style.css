@@ -443,6 +443,8 @@ ul { list-style: none; }
 .project-thumb .thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 /* rose-arm card frames the rover on the right of the shot */
 .work-grid a[href="project-rose-arm.html"] .thumb-img { object-position: 72% center; }
+/* mini-bridge card: portrait cover — drop down to frame the arched bridge */
+.work-grid a[href="project-mini-bridge.html"] .thumb-img { object-position: center 66%; }
 .project-thumb .thumb-icon { position: relative; z-index: 0; }
 /* result-metric chip */
 .project-thumb .project-metric {
