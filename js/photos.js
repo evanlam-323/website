@@ -65,11 +65,12 @@ window.PHOTOS = [
   { file: "IMG_5514.jpg", project: "soma-pump", step: "process-2", caption: "" },
 
   /* ---- Stair-Climbing Robot ---- */
+  { file: "stairmaster-cover.jpg", project: "stair-robot", step: "cover", caption: "" },
   { file: "IMG_4089.jpg", project: "stair-robot", step: "process-1", caption: "" },
-  { file: "IMG_4200.jpg", project: "stair-robot", step: "process-2", caption: "" },
+  { file: "IMG_4200.jpg", project: "stair-robot", step: "process-2", caption: "", title: "Prototyping" },
   { file: "IMG_4211.jpg", project: "stair-robot", step: "process-2", caption: "" },
   { file: "IMG_4271.jpg", project: "stair-robot", step: "process-2", caption: "" },
-  { file: "IMG_3612.jpg", project: "stair-robot", step: "process-4", caption: "" },
+  { file: "IMG_3612.jpg", project: "stair-robot", step: "process-4", caption: "", title: "Iterating" },
   { file: "IMG_1037.jpg", project: "stair-robot", step: "process-5", caption: "" },
   { file: "IMG_2048.jpg", project: "stair-robot", step: "gallery", caption: "" },
   { file: "IMG_4320.jpg", project: "stair-robot", step: "gallery", caption: "" },
@@ -116,6 +117,8 @@ window.PHOTOS = [
   { file: "IMG_9669-clip.webm", project: "kealakehe", step: "process-3.0", caption: "", dir: "videos/kealakehe" },
   { file: "IMG_9710-clip.webm", project: "kealakehe", step: "process-5.0", caption: "", dir: "videos/kealakehe" },
   { file: "IMG_9732-clip.webm", project: "kealakehe", step: "process-5.1", caption: "", dir: "videos/kealakehe" },
+  { file: "IMG_2050-clip.webm", project: "stair-robot", step: "process-3.0", caption: "", title: "TESTIng", dir: "videos/stair-robot" },
+  { file: "IMG_4374-clip.webm", project: "stair-robot", step: "process-3.1", caption: "", dir: "videos/stair-robot" },
   { file: "20260328_132434-clip.webm", project: "mini-bridge", step: "process-5.0", caption: "", dir: "videos/mini-bridge" },
   { file: "IMG_5730-clip.webm", project: "mini-bridge", step: "process-4.1", caption: "", dir: "videos/mini-bridge" },
   { file: "IMG_5735-clip.webm", project: "mini-bridge", step: "process-3.1", caption: "", dir: "videos/mini-bridge" },
