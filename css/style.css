@@ -564,9 +564,6 @@ ul { list-style: none; }
 .research-body {
   max-width: var(--maxw); margin: 0 auto;
   padding: 20px var(--pad) clamp(70px, 9vw, 120px);
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: clamp(30px, 5vw, 70px);
 }
 
 /* filter sidebar */
@@ -586,34 +583,23 @@ ul { list-style: none; }
 .stat .num { font-family: var(--font-display); font-weight: 900; font-size: 3rem; line-height: 1; color: #fff; }
 .stat .lbl { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .2em; color: var(--text-dim2); text-transform: uppercase; margin-top: 8px; }
 
-/* research table — scrollable region with a pinned column header */
+/* research table — full-width list that scrolls with the page */
 .rtable {
   width: 100%;
-  max-height: 62vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 16px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) rgba(255,255,255,.06);
 }
-.rtable::-webkit-scrollbar { width: 8px; }
-.rtable::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
-.rtable::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 0; }
 .rtable-head {
   display: grid;
-  grid-template-columns: 120px 1fr 220px 40px;
+  grid-template-columns: 120px 1fr 220px;
   gap: 20px;
   padding: 6px 0 18px;
   border-bottom: 1px solid var(--line);
   font-family: var(--font-mono); font-size: .68rem; letter-spacing: .22em; color: var(--text-dim2); text-transform: uppercase;
-  position: sticky;
-  top: 0;
-  z-index: 2;
   background: var(--bg);
 }
+.rtable-head span:last-child { text-align: right; }
 .rrow {
   display: grid;
-  grid-template-columns: 120px 1fr 220px 40px;
+  grid-template-columns: 120px 1fr 220px;
   gap: 20px;
   align-items: start;
   padding: 30px 0;
@@ -625,9 +611,7 @@ ul { list-style: none; }
 .rrow .r-year { font-family: var(--font-mono); font-size: .9rem; color: var(--accent); letter-spacing: .05em; }
 .rrow .r-title { display: block; font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: clamp(1.05rem, 2vw, 1.5rem); line-height: 1.05; color: #fff; }
 .rrow .r-sub { display: block; color: var(--text-dim); font-size: .85rem; margin-top: 8px; }
-.rrow .r-inst { font-family: var(--font-mono); font-size: .85rem; letter-spacing: .08em; color: var(--text-dim); text-transform: uppercase; }
-.rrow .r-id { color: var(--text-dim2); transition: color .25s ease, transform .25s ease; text-align: right; }
-.rrow:hover .r-id { color: var(--accent); transform: translate(3px, -3px); }
+.rrow .r-inst { font-family: var(--font-mono); font-size: .85rem; letter-spacing: .08em; color: var(--text-dim); text-transform: uppercase; text-align: right; }
 .rrow[hidden] { display: none; }
 
 .research-status {

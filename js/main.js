@@ -15,7 +15,7 @@ const SITE = {
   ],
   nav: [
     { label: 'Projects', href: 'index.html#work', children: 'projects' },
-    { label: 'Research', href: 'research.html' },
+    { label: 'Certifications', href: 'research.html' },
     { label: 'About',    href: 'about.html' },
   ],
   // Individual project pages — shown in the Projects dropdown.
@@ -1447,7 +1447,7 @@ const PERSONAL_ROTATE_MS = 5000;   // how long each photo shows before cross-fad
 // everyone, edit these arrays (filenames live in images/).
 const PERSONAL_DEFAULTS = {
   hero:  ['IMG_6901.jpg'],
-  about: ['IMG_5021.jpg', 'IMG_6243.jpg', 'IMG_7858.jpg', 'IMG_7737.jpg', 'IMG_4567_Original.jpg'],
+  about: ['IMG_4567_Original.jpg', 'IMG_6243.jpg', 'IMG_7858.jpg', 'IMG_7737.jpg', 'IMG_5021.jpg'],
 };
 function loadPersonalSlots() {
   try { return JSON.parse(localStorage.getItem(PERSONAL_SLOTS_KEY) || '{}'); }
