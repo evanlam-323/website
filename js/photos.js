@@ -62,7 +62,17 @@ window.PHOTOS = [
   { file: "IMG_7143.jpg", project: "steel-bridge", step: "process-5", caption: "" },
 
   /* ---- Soma Pump ---- */
+  { file: "pumpcover.jpg", project: "soma-pump", step: "cover", caption: "" },
   { file: "IMG_5514.jpg", project: "soma-pump", step: "process-2", caption: "" },
+  { file: "IMG_4242-clip.webm", project: "soma-pump", step: "process-1.0", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_4453-clip.webm", project: "soma-pump", step: "gallery", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_4456-clip.webm", project: "soma-pump", step: "process-3.0", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_4577-clip.webm", project: "soma-pump", step: "gallery", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_5490-clip.webm", project: "soma-pump", step: "process-3.1", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_6323-clip.webm", project: "soma-pump", step: "process-4.0", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_6367-clip.webm", project: "soma-pump", step: "gallery", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_6369-clip.webm", project: "soma-pump", step: "gallery", caption: "", dir: "videos/soma-pump" },
+  { file: "IMG_6422-clip.webm", project: "soma-pump", step: "process-5.0", caption: "", dir: "videos/soma-pump" },
 
   /* ---- Stair-Climbing Robot ---- */
   { file: "stairmaster-cover.jpg", project: "stair-robot", step: "cover", caption: "" },
@@ -71,7 +81,7 @@ window.PHOTOS = [
   { file: "IMG_4211.jpg", project: "stair-robot", step: "process-2", caption: "" },
   { file: "IMG_4271.jpg", project: "stair-robot", step: "process-2", caption: "" },
   { file: "IMG_3612.jpg", project: "stair-robot", step: "process-4", caption: "", title: "Iterating" },
-  { file: "IMG_1037.jpg", project: "stair-robot", step: "process-5", caption: "" },
+  { file: "IMG_1037.jpg", project: "stair-robot", step: "process-5.0", caption: "" },
   { file: "IMG_2048.jpg", project: "stair-robot", step: "gallery", caption: "" },
   { file: "IMG_4320.jpg", project: "stair-robot", step: "gallery", caption: "" },
 

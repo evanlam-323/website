@@ -851,6 +851,9 @@ body[data-project="mini-bridge"] .project-cover img { object-position: center 66
    robot drops into the lower half of the banner, revealing more of the chain/arm
    above it rather than the empty desk/ceiling */
 body[data-project="stair-robot"] .project-cover img { object-position: center 60%; }
+/* soma-pump cover: rotated bench shot, wide crop — sit the band lower so the twin
+   pump heads land centered in the banner rather than the desk clutter above */
+body[data-project="soma-pump"] .project-cover img { object-position: center 64%; }
 .project-cover.is-empty img { display: none; }
 
 .project-body {
