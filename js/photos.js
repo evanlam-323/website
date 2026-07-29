@@ -122,8 +122,8 @@ window.PHOTOS = [
   { file: "IMG_5684-clip.webm", project: "rose-arm", step: "process-5.1", caption: "", dir: "videos/rose-arm" },
   { file: "IMG_6178-clip.webm", project: "rose-arm", step: "process-3.0", caption: "", dir: "videos/rose-arm" },
   { file: "IMG_6673-clip.webm", project: "rose-arm", step: "process-5.0", caption: "Using the arm to flip switches for the Equipment Servicing Mission", dir: "videos/rose-arm" },
-  { file: "IMG_2493-clip.webm", project: "steel-bridge", step: "process-2.0", caption: "", dir: "videos/steel-bridge" },
-  { file: "IMG_2520-clip.webm", project: "steel-bridge", step: "process-2.1", caption: "", dir: "videos/steel-bridge" },
+  { file: "IMG_2520-clip.webm", project: "steel-bridge", step: "process-2.0", caption: "", dir: "videos/steel-bridge" },
+  { file: "IMG_2493-clip.webm", project: "steel-bridge", step: "process-2.1", caption: "", dir: "videos/steel-bridge" },
   { file: "IMG_2828-clip.webm", project: "steel-bridge", step: "gallery", caption: "", dir: "videos/steel-bridge" },
 
 ];
