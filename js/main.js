@@ -214,6 +214,53 @@ function initWorkFilters() {
   apply();
 }
 
+/* ---- Work-grid covers: mirror each project's cover onto its home-page card ----
+   The index work grid ships a hardcoded thumbnail per project. This keeps that
+   thumbnail in sync with whatever photo is chosen as the project's cover: for each
+   card it derives the project id from the href (project-<id>.html), finds that
+   project's step:"cover" row in window.PHOTOS — honoring live #edit moves and
+   deletes, same as the project page — and swaps the card image to that file.
+   Projects with no cover row keep their baked-in thumbnail. Index-only (no-op
+   where there's no work grid). Runs after the label sheet loads so a cover set in
+   #edit shows on the home page the moment you return, before it's even baked. */
+function initWorkCovers() {
+  const cards = document.querySelectorAll('.work-grid a.project[href^="project-"]');
+  if (!cards.length || !Array.isArray(window.PHOTOS)) return;
+  const moves = loadPhotoMoves();
+  const deleted = loadDeletes();
+  const rows = window.PHOTOS.map(p => resolveRow(p, moves)).filter(p => !deleted.has(p.file));
+  cards.forEach(card => {
+    const m = /project-(.+)\.html/.exec(card.getAttribute('href') || '');
+    if (!m) return;
+    const cover = rows.find(p => p.project === m[1] && p.step === 'cover');
+    if (!cover) return;                 // no cover chosen — keep the baked thumbnail
+    const thumb = card.querySelector('.project-thumb');
+    if (!thumb) return;
+    const src = mediaSrc(cover);
+    if (isVideoFile(cover.file)) {
+      thumb.querySelectorAll('.thumb-img').forEach(el => el.remove());
+      const v = document.createElement('video');
+      v.className = 'thumb-img';
+      v.src = src;
+      v.muted = true; v.loop = true; v.autoplay = true; v.preload = 'metadata';
+      v.setAttribute('playsinline', '');
+      v.onerror = () => v.remove();
+      thumb.insertBefore(v, thumb.firstChild);
+    } else {
+      thumb.querySelectorAll('video.thumb-img').forEach(el => el.remove());
+      let img = thumb.querySelector('img.thumb-img');
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'thumb-img';
+        img.alt = card.querySelector('.project-title')?.textContent || '';
+        img.onerror = function () { this.remove(); };
+        thumb.insertBefore(img, thumb.firstChild);
+      }
+      img.src = src;
+    }
+  });
+}
+
 /* ---- Project-page image gallery + lightbox ----
    Builds ONE overlay and reuses it. Tiles whose image hasn't been added yet
    show a placeholder; clicking still opens the lightbox (placeholder view) so
@@ -1745,6 +1792,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initReveal();
   initFilters();
   initWorkFilters();
+  initWorkCovers();
   initPhotos();
   initGallery();
   initModelViewer();
