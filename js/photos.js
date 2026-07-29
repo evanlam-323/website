@@ -64,7 +64,7 @@ window.PHOTOS = [
   { file: "IMG_5695.jpg", project: "mini-bridge", step: "gallery", caption: "" },
   { file: "IMG_5703.jpg", project: "mini-bridge", step: "gallery", caption: "" },
   { file: "IMG_5736.jpg", project: "mini-bridge", step: "gallery", caption: "" },
-  { file: "IMG_5974.jpg", project: "mini-bridge", step: "gallery", caption: "" },
+  { file: "IMG_5974.jpg", project: "mini-bridge", step: "cover", caption: "" },
 
   /* ---- Steel Bridge ---- (process-2 is the two clips in the video section below) */
   { file: "IMG_8065.jpg", project: "steel-bridge", step: "cover", caption: "" },

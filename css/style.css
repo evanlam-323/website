@@ -840,6 +840,8 @@ ul { list-style: none; }
 }
 /* rose-arm cover frames the rover on the right of the shot */
 body[data-project="rose-arm"] .project-cover img { object-position: 72% center; }
+/* mini-bridge cover: portrait source, wide crop — drop down to center on the arched bridge */
+body[data-project="mini-bridge"] .project-cover img { object-position: center 66%; }
 .project-cover.is-empty img { display: none; }
 
 .project-body {
