@@ -1594,8 +1594,14 @@ function initGoals() {
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem(GOALS_KEY) || '[]'); } catch { saved = []; }
   const boxes = [...list.querySelectorAll('input[type="checkbox"]')];
+  // Goals are display-only on the live site — visitors can't tick them off.
+  // Only in edit mode (#edit) are they interactive, so the owner can mark
+  // progress in their own browser (remembered per-position via localStorage).
+  const editable = editingRequested();
   boxes.forEach((box, i) => {
     if (saved[i]) box.checked = true;
+    box.disabled = !editable;
+    if (!editable) return;
     box.addEventListener('change', () => {
       const state = boxes.map(b => b.checked);
       localStorage.setItem(GOALS_KEY, JSON.stringify(state));
@@ -1618,6 +1624,12 @@ const PERSONAL_DEFAULTS = {
   hero:  ['IMG_6901.jpg'],
   about: ['IMG_4567_Original.jpg', 'IMG_6243.jpg', 'IMG_7858.jpg', 'IMG_7737.jpg', 'IMG_5021.jpg'],
 };
+// Per-photo crop nudges for slots. object-fit is cover; a centered crop is right
+// for most, but a few tall portraits need the crop lifted to keep faces in frame.
+const PERSONAL_OBJECT_POS = {
+  'IMG_7737.jpg': 'center 32%',   // portrait in a wide box — raise crop to center the two figures
+};
+function objectPosFor(file) { return PERSONAL_OBJECT_POS[file] || ''; }
 function loadPersonalSlots() {
   try { return JSON.parse(localStorage.getItem(PERSONAL_SLOTS_KEY) || '{}'); }
   catch { return {}; }
@@ -1685,6 +1697,7 @@ function renderPersonalSlot(slot) {
 
   let idx = 0;
   front.src = 'images/' + files[0];
+  front.style.objectPosition = objectPosFor(files[0]);
   front.style.opacity = '1';
   back.style.opacity = '0';
   front.onerror = () => { front.style.display = 'none'; if (ph) ph.classList.add('show'); };
@@ -1699,10 +1712,28 @@ function renderPersonalSlot(slot) {
     idx = (idx + 1) % files.length;
     const incoming = showingFront ? back : front;
     const outgoing = showingFront ? front : back;
-    incoming.src = 'images/' + files[idx];
-    incoming.style.opacity = '1';
-    outgoing.style.opacity = '0';
-    showingFront = !showingFront;
+    const nextSrc = 'images/' + files[idx];
+    // Load the next photo into the hidden layer FIRST, then cross-fade. Fading a
+    // layer up before its new src has decoded shows the layer's stale image and
+    // pops to the new one mid-fade — the glitch. Waiting for load/decode means
+    // the incoming layer already shows the right photo when its opacity ramps up.
+    let faded = false;
+    const fade = () => {
+      if (faded) return;        // run once — load and complete can both fire
+      faded = true;
+      incoming.style.opacity = '1';
+      outgoing.style.opacity = '0';
+      showingFront = !showingFront;
+    };
+    const pending = new Image();
+    pending.onload = fade;
+    pending.onerror = fade;   // don't stall the rotation on a bad file
+    pending.src = nextSrc;
+    incoming.src = nextSrc;
+    incoming.style.objectPosition = objectPosFor(files[idx]);
+    // Already cached/complete: swap immediately (onload may not fire for a
+    // fully-cached image in some browsers).
+    if (pending.complete) fade();
   }, PERSONAL_ROTATE_MS);
 }
 
