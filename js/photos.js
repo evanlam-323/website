@@ -66,10 +66,12 @@ window.PHOTOS = [
   { file: "IMG_5736.jpg", project: "mini-bridge", step: "gallery", caption: "" },
   { file: "IMG_5974.jpg", project: "mini-bridge", step: "gallery", caption: "" },
 
-  /* ---- Steel Bridge ---- */
+  /* ---- Steel Bridge ---- (process-2 is the two clips in the video section below) */
+  { file: "IMG_8065.jpg", project: "steel-bridge", step: "cover", caption: "" },
   { file: "IMG_1760.jpg", project: "steel-bridge", step: "process-1", caption: "" },
+  { file: "steel-bridge-team.jpg", project: "steel-bridge", step: "process-3.0", caption: "" },
+  { file: "IMG_1477.jpg", project: "steel-bridge", step: "process-4.0", caption: "" },
   { file: "IMG_7143.jpg", project: "steel-bridge", step: "process-5", caption: "" },
-  { file: "steel-bridge-team.jpg", project: "steel-bridge", step: "gallery", caption: "" },
 
   /* ---- Soma Pump ---- */
   { file: "IMG_5514.jpg", project: "soma-pump", step: "process-2", caption: "" },
@@ -120,5 +122,8 @@ window.PHOTOS = [
   { file: "IMG_5684-clip.webm", project: "rose-arm", step: "process-5.1", caption: "", dir: "videos/rose-arm" },
   { file: "IMG_6178-clip.webm", project: "rose-arm", step: "process-3.0", caption: "", dir: "videos/rose-arm" },
   { file: "IMG_6673-clip.webm", project: "rose-arm", step: "process-5.0", caption: "Using the arm to flip switches for the Equipment Servicing Mission", dir: "videos/rose-arm" },
+  { file: "IMG_2493-clip.webm", project: "steel-bridge", step: "process-2.0", caption: "", dir: "videos/steel-bridge" },
+  { file: "IMG_2520-clip.webm", project: "steel-bridge", step: "process-2.1", caption: "", dir: "videos/steel-bridge" },
+  { file: "IMG_2828-clip.webm", project: "steel-bridge", step: "gallery", caption: "", dir: "videos/steel-bridge" },
 
 ];

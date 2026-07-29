@@ -413,10 +413,21 @@ function initProcessPile() {
 
   const layout = () => {
     const headH = header ? header.offsetHeight : 72;
+    // Measure each card's TRUE document-flow top with sticky + the JS pin
+    // transform neutralized. Otherwise a layout() that runs while the page is
+    // already scrolled — most commonly a refresh that restores the previous
+    // scroll position — reads each STUCK card's shifted offsetTop instead of its
+    // flow position, so the pin math is wrong and the cards pile up / drift on
+    // scroll. Neutralize, measure, restore — synchronously, before paint, so
+    // there's no visible flicker.
+    const savedTf = cards.map(c => c.style.transform);
+    cards.forEach(c => { c.style.position = 'static'; c.style.top = 'auto'; c.style.transform = 'none'; });
+    void pile.offsetHeight;                       // flush the un-stuck layout
     const tallest = Math.max(...cards.map(c => c.offsetHeight));
+    naturals = cards.map(docTop);
+    cards.forEach((c, i) => { c.style.position = ''; c.style.transform = savedTf[i]; });
     pinTop = Math.max(headH + 20, Math.round((window.innerHeight - tallest) / 2));
     cards.forEach(c => { c.style.top = pinTop + 'px'; });
-    naturals = cards.map(docTop);
     render();
   };
 
