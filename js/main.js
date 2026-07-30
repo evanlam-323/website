@@ -905,7 +905,7 @@ function setSlotMedia(media, entry, overrides) {
   } else {
     media.querySelectorAll('video').forEach(el => el.remove());
     let img = media.querySelector('img');
-    if (!img) { img = document.createElement('img'); img.loading = 'lazy'; media.insertBefore(img, media.firstChild); }
+    if (!img) { img = document.createElement('img'); img.loading = 'lazy'; img.decoding = 'async'; media.insertBefore(img, media.firstChild); }
     img.src = mediaSrc(entry);
     img.alt = cap;
     img.onerror = () => { markEmpty(); img.remove(); };
@@ -1001,7 +1001,7 @@ function buildProcessPager(slot, entries, overrides, titleOverrides, descOverrid
       ? `<video class="card-video" src="${esc(mediaSrc(entry))}" muted loop controls playsinline preload="metadata"
                 aria-label="${esc(cap)}"
                 onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();"></video>`
-      : `<img alt="${esc(cap)}" loading="lazy" src="${esc(mediaSrc(entry))}"
+      : `<img alt="${esc(cap)}" loading="lazy" decoding="async" src="${esc(mediaSrc(entry))}"
                onerror="this.closest('.card-media').classList.add('is-empty'); this.remove();" />`;
     return `
       <div class="pager-slide" data-file="${esc(entry.file)}">
@@ -1854,7 +1854,7 @@ function openPersonalPicker(slotName) {
   const overlay = document.createElement('div');
   overlay.className = 'personal-picker';
   const grid = files.length
-    ? files.map(f => `<button type="button" class="pp-item${selected.has(f) ? ' selected' : ''}" data-file="${escHtml(f)}"><img src="images/${escHtml(f)}" loading="lazy" alt="" /><span class="pp-check" aria-hidden="true">✓</span></button>`).join('')
+    ? files.map(f => `<button type="button" class="pp-item${selected.has(f) ? ' selected' : ''}" data-file="${escHtml(f)}"><img src="images/${escHtml(f)}" loading="lazy" decoding="async" alt="" /><span class="pp-check" aria-hidden="true">✓</span></button>`).join('')
     : `<p class="pp-empty">No personal photos found in js/photos.js.</p>`;
   overlay.innerHTML = `
     <div class="pp-panel" role="dialog" aria-label="Pick personal photos">

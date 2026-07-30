@@ -1500,9 +1500,96 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
   .nav { gap: 18px; }
   .nav a { font-size: .72rem; letter-spacing: .1em; }
   .footer-bottom-inner { flex-direction: column; }
-  /* right-align the dropdown so it stays on-screen */
-  .dropdown { left: auto; right: 0; transform: translateY(8px); min-width: 210px; }
+  /* Mobile: the nav row is too cramped to float a 240px menu beside
+     the parent without clipping, so anchor the dropdown to the header
+     and let it open rightward across the row, pinned inside both
+     viewport margins. This can't be cut off on either side. */
+  .nav-item.has-dropdown { position: static; }
+  .has-dropdown::after { display: none; } /* drop the hover bridge; mobile is tap-based */
+  .dropdown {
+    top: 100%;
+    left: 16px;
+    right: 16px;
+    transform: translateY(8px);
+    min-width: 0;
+    max-width: none;
+    width: auto;
+  }
   .has-dropdown:hover .dropdown,
   .has-dropdown:focus-within .dropdown,
   .has-dropdown.open .dropdown { transform: translateY(0); }
+}
+
+/* =========================================================
+   SCROLL PERFORMANCE
+   Skip layout/paint/decode for media-heavy blocks while they
+   are off-screen. `contain-intrinsic-size: auto <fallback>`
+   reserves space up front (no scrollbar jump) and then
+   remembers each block's real rendered size after first paint.
+   ========================================================= */
+.project,
+.pager-slide,
+.pile-card,
+.gallery-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+
+/* Respect users who ask for less motion / work. */
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
+
+/* =========================================================
+   LAUNCH SPLASH  (see js/loader.js)
+   Full-screen overlay shown on load while first images warm.
+   ========================================================= */
+#site-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  opacity: 1;
+  transition: opacity .5s var(--ease);
+}
+#site-loader.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+.site-loader__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.site-loader__mark {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.6rem, 6vw, 2.8rem);
+  letter-spacing: .22em;
+  color: var(--light);
+  animation: loaderPulse 1.5s var(--ease) infinite;
+}
+.site-loader__bar {
+  width: min(220px, 52vw);
+  height: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.site-loader__bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width .3s var(--ease);
+}
+@keyframes loaderPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-loader__mark { animation: none; }
 }
