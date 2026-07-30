@@ -1692,6 +1692,12 @@ function renderPersonalSlot(slot) {
 
   // Stop any rotation from a previous render before re-laying-out.
   if (slot._rotTimer) { clearInterval(slot._rotTimer); slot._rotTimer = null; }
+  // Drop any progress bar from a previous render — it's rebuilt below to match
+  // the current photo count. The bar lives in a wrapper alongside the slot, so
+  // look there too.
+  const prevWrap = slot.parentElement && slot.parentElement.classList.contains('slot-progress-wrap')
+    ? slot.parentElement : slot;
+  prevWrap.querySelectorAll('.slot-progress').forEach(el => el.remove());
 
   if (!files.length) {
     // Empty (about slot with no pick): show its placeholder.
@@ -1737,6 +1743,53 @@ function renderPersonalSlot(slot) {
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (files.length < 2 || reduce) return;
 
+  // Story-style progress bar: one segment per photo, sitting in the gap just
+  // above the frame. The active segment fills over the dwell time so you can see
+  // which photo you're on and when it will advance. The frame clips its overflow
+  // for the cross-fade, so the bar lives in a wrapper as the slot's sibling —
+  // that lets it sit above the photo rather than overlaying it.
+  let wrap = slot.parentElement && slot.parentElement.classList.contains('slot-progress-wrap')
+    ? slot.parentElement : null;
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.className = 'slot-progress-wrap';
+    slot.parentNode.insertBefore(wrap, slot);
+    wrap.appendChild(slot);
+  }
+  const bar = document.createElement('div');
+  bar.className = 'slot-progress';
+  bar.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < files.length; i++) {
+    const seg = document.createElement('span');
+    seg.className = 'slot-progress-seg';
+    const fill = document.createElement('span');
+    fill.className = 'slot-progress-fill';
+    seg.appendChild(fill);
+    bar.appendChild(seg);
+  }
+  wrap.insertBefore(bar, slot);
+  // Paint the bar for a given active photo: segments before it are full,
+  // the active one animates 0→100% over the dwell, later ones are empty.
+  const paintProgress = (active) => {
+    const fills = bar.querySelectorAll('.slot-progress-fill');
+    fills.forEach((fill, i) => {
+      if (i < active) {
+        fill.style.transition = 'none';
+        fill.style.width = '100%';
+      } else if (i === active) {
+        fill.style.transition = 'none';
+        fill.style.width = '0%';
+        void fill.offsetWidth;   // reflow so the fill restarts from empty
+        fill.style.transition = 'width ' + PERSONAL_ROTATE_MS + 'ms linear';
+        fill.style.width = '100%';
+      } else {
+        fill.style.transition = 'none';
+        fill.style.width = '0%';
+      }
+    });
+  };
+  paintProgress(0);
+
   let showingFront = true;
   slot._rotTimer = setInterval(() => {
     idx = (idx + 1) % files.length;
@@ -1754,6 +1807,7 @@ function renderPersonalSlot(slot) {
       incoming.style.opacity = '1';
       outgoing.style.opacity = '0';
       showingFront = !showingFront;
+      paintProgress(idx);       // advance the bar in step with the cross-fade
     };
     const pending = new Image();
     pending.onload = fade;

@@ -302,6 +302,26 @@ ul { list-style: none; }
   object-fit: cover; opacity: 1; transition: opacity 1.1s ease;
 }
 @media (prefers-reduced-motion: reduce) { .portrait-img { transition: none; } }
+/* Story-style rotation progress bar: one thin segment per photo, sitting in the
+   gap just above the frame. The active segment's fill animates over the dwell
+   time. The wrapper stacks the bar above the (overflow-clipped) photo. */
+.slot-progress-wrap { display: block; }
+.slot-progress {
+  display: flex; gap: 5px;
+  /* A compact bar centered above the photo — narrower than the frame, so it
+     reads as a small indicator rather than a full-width strip. */
+  width: 50%; max-width: 220px; margin: 0 auto 9px;
+  pointer-events: none;
+}
+.slot-progress-seg {
+  flex: 1; height: 3px; border-radius: 3px; overflow: hidden;
+  background: rgba(255, 255, 255, .22);
+}
+.slot-progress-fill {
+  display: block; width: 0; height: 100%; border-radius: 3px;
+  background: var(--accent);
+}
+@media (prefers-reduced-motion: reduce) { .slot-progress-fill { transition: none; } }
 .portrait-ph {
   display: none;
   position: absolute;
