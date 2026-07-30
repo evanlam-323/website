@@ -1088,7 +1088,7 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 .pile-card:not(.is-front) .pager-dots { opacity: 0; pointer-events: none; }
 /* At the first/last photo the unusable arrow greys out and stops responding
    (the pager no longer wraps around). JS toggles .is-disabled — see initCardPagers. */
-.pager-arrow.is-disabled { opacity: .22; pointer-events: none; cursor: default; box-shadow: none; }
+.pager-arrow.is-disabled { opacity: .4; pointer-events: none; cursor: default; box-shadow: none; }
 /* ...and its slides must not catch clicks either: a card still sitting in the
    pile has a higher z-index, and its .is-current slide re-enables
    pointer-events — without this it steals clicks aimed at the FRONT card's
