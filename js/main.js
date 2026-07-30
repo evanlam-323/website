@@ -857,8 +857,18 @@ function renderPhotos() {
         // hand-written default (restored from the template above).
         if (head) { const t = titleFor(entry, titleOverrides); if (t) head.textContent = t; }
         // Same for the step's description paragraph (the plain <p>, not the caption).
-        const descP = [...slot.querySelectorAll(':scope > p')].find(p => !p.classList.contains('card-photo-cap'));
-        if (descP) { const d = descFor(entry, descOverrides); if (d) descP.textContent = d; }
+        // If the card was authored without a description <p> but this photo now
+        // carries a baked/edited `desc`, add one so it still shows.
+        const d = descFor(entry, descOverrides);
+        if (d) {
+          let descP = [...slot.querySelectorAll(':scope > p')].find(p => !p.classList.contains('card-photo-cap'));
+          if (!descP) {
+            descP = document.createElement('p');
+            descP.className = 'card-desc';
+            if (cap) cap.insertAdjacentElement('afterend', descP); else slot.appendChild(descP);
+          }
+          descP.textContent = d;
+        }
       }
       return;
     }
@@ -1185,11 +1195,22 @@ function wireEditableTitles() {
    Only paragraphs on a card/slide holding a photo (closest [data-file]) wire up. */
 function wireEditableDescs() {
   const paras = [];
-  document.querySelectorAll('.pager-slide[data-file] .card-desc').forEach(p => paras.push(p));
+  // Pager slides: reuse the description <p>, or add an empty one to fill in.
+  document.querySelectorAll('.pager-slide[data-file]').forEach(slide => {
+    let p = slide.querySelector('.card-desc');
+    if (!p) { p = document.createElement('p'); p.className = 'card-desc'; slide.appendChild(p); }
+    paras.push(p);
+  });
+  // Single-photo cards: the plain <p> that isn't the caption, or add one after it.
   document.querySelectorAll('[data-slot][data-file]').forEach(slot => {
     if (slot.querySelector('.card-pager')) return;   // pager slides handled above
-    const p = [...slot.querySelectorAll(':scope > p')].find(x => !x.classList.contains('card-photo-cap'));
-    if (p) paras.push(p);
+    let p = [...slot.querySelectorAll(':scope > p')].find(x => !x.classList.contains('card-photo-cap'));
+    if (!p) {
+      p = document.createElement('p'); p.className = 'card-desc';
+      const cap = slot.querySelector(':scope > .card-photo-cap');
+      if (cap) cap.insertAdjacentElement('afterend', p); else slot.appendChild(p);
+    }
+    paras.push(p);
   });
   paras.forEach(el => {
     if (el.classList.contains('desc-editable')) return;   // idempotent
@@ -1199,6 +1220,8 @@ function wireEditableDescs() {
     el.setAttribute('spellcheck', 'true');
     el.classList.add('desc-editable');
     el.title = 'Edit this step description';
+    if (!el.textContent.trim()) el.dataset.empty = '';   // show "click to add" hint
+    el.addEventListener('focus', () => delete el.dataset.empty);
     el.addEventListener('input', () => {
       const h = el.closest('[data-file]');
       if (!h) return;
