@@ -1068,18 +1068,12 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 .card-desc { color: var(--text-dim); font-size: .9rem; line-height: 1.5; margin-top: 14px; }
 .pager-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 4;
-  width: 40px; height: 40px; display: grid; place-items: center;
-  /* On DESKTOP the arrows sit at left/right:-54px — OUT in the near-black page
-     gutter beside the card. A dark disc there is invisible (that's why arrows
-     "showed on mobile but not desktop": mobile pins them at +6px over the photo).
-     So give them a solid dark disc + a bright ACCENT ring and a faint accent
-     halo — that reads unmistakably on the dark gutter AND over a photo. */
-  background: rgba(14, 14, 16, .92); border: 2px solid var(--accent); border-radius: 50%;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .55), 0 0 0 4px rgba(234, 74, 42, .14);
+  width: 38px; height: 38px; display: grid; place-items: center;
+  background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .28); border-radius: 50%;
   color: #fff; font-size: 1.4rem; line-height: 1; cursor: pointer;
-  transition: background .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
 }
-.pager-arrow:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-50%) scale(1.12); box-shadow: 0 6px 18px rgba(0, 0, 0, .55), 0 0 0 5px rgba(234, 74, 42, .22); }
+.pager-arrow:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-50%) scale(1.1); }
 .pager-prev { left: -54px; }
 .pager-next { right: -54px; }
 .pager-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
@@ -1090,7 +1084,7 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 .pile-card:not(.is-front) .pager-dots { opacity: 0; pointer-events: none; }
 /* At the first/last photo the unusable arrow greys out and stops responding
    (the pager no longer wraps around). JS toggles .is-disabled — see initCardPagers. */
-.pager-arrow.is-disabled { opacity: .4; pointer-events: none; cursor: default; box-shadow: none; }
+.pager-arrow.is-disabled { opacity: .4; pointer-events: none; cursor: default; }
 /* ...and its slides must not catch clicks either: a card still sitting in the
    pile has a higher z-index, and its .is-current slide re-enables
    pointer-events — without this it steals clicks aimed at the FRONT card's
@@ -1201,6 +1195,11 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
   display: grid; place-items: center; gap: 14px; color: var(--text-dim2);
   width: min(70vw, 560px); aspect-ratio: 4 / 3; border: 1px dashed var(--line); background: var(--bg-2);
 }
+/* render() hides the two stage slots it isn't using via the `hidden` attribute,
+   but a class selector's `display` beats the UA's `[hidden] { display: none }`.
+   Without this the dashed "coming soon" box kept showing UNDER a real photo and
+   read as a phantom second image in the lightbox. */
+.lb-img[hidden], .lb-video[hidden], .lb-ph[hidden] { display: none; }
 .lb-ph svg { width: 72px; opacity: .3; }
 .lb-ph-text { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
 .lb-caption { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: #fff; }
