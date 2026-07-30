@@ -1242,6 +1242,9 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 }
 .card-photo-cap:empty { display: none; }
 .process-pile--polaroid .card-photo-cap { color: #55554f; padding: 0 4px; }
+/* photo caption is a direct <p> child of the card, so the index skin's
+   `.pile-card > p` (step-description size) bumps it to .9rem — pin it back small */
+.process-pile--index .pile-card > .card-photo-cap { font-size: .68rem; line-height: 1.4; margin-top: 10px; }
 .editing-captions .card-photo-cap { display: block; }
 /* a process slot with no photo assigned has nothing to caption — keep it hidden.
    Direct child only, so captions inside a multi-photo pager's slides stay visible. */

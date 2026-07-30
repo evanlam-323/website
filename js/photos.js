@@ -7,8 +7,6 @@
    ========================================================================= */
 
 window.PHOTOS = [
-
-  /* ---- UH 88" Deployable Weather Sensor ---- */
   { file: "uh88-cover.jpg", project: "uh88-weather", step: "cover", caption: "" },
   { file: "IMG_6886.jpg", project: "uh88-weather", step: "process-1", caption: "", desc: "Studied the existing roof sensors and located possible mounting locations" },
   { file: "IMG_6888.jpg", project: "uh88-weather", step: "process-1.1", caption: "", desc: "Studied the existing roof sensors and located possible mounting locations" },
@@ -27,8 +25,6 @@ window.PHOTOS = [
   { file: "IMG_7289.jpg", project: "uh88-weather", step: "gallery", caption: "" },
   { file: "IMG_7297.jpg", project: "uh88-weather", step: "gallery", caption: "" },
   { file: "IMG_7475.jpg", project: "uh88-weather", step: "gallery", caption: "" },
-
-  /* ---- 6 DOF Arm (Team RoSE) ---- */
   { file: "78174451262__7ACCAE33-43A1-41AF-89D6-921FA8FAA522.jpg", project: "rose-arm", step: "process-1", caption: "", title: "initial designs", desc: "Created a cycloidal gear box based off of online designs, and configurations." },
   { file: "IMG_5303.jpg", project: "rose-arm", step: "process-1", caption: "", desc: "Created a cycloidal gear box based off of online designs, and configurations." },
   { file: "IMG_5320.jpg", project: "rose-arm", step: "process-2", caption: "", title: "Prototyping", desc: "Started manufacturing and testing." },
@@ -41,8 +37,6 @@ window.PHOTOS = [
   { file: "IMG_2446.jpg", project: "rose-arm", step: "gallery", caption: "" },
   { file: "IMG_2776.jpg", project: "rose-arm", step: "gallery", caption: "" },
   { file: "IMG_3503.jpg", project: "rose-arm", step: "gallery", caption: "" },
-
-  /* ---- 3D-Printed Mini-Bridge ---- */
   { file: "0A3EA181-2469-4CFB-8F04-9F77999EAFA6.jpg", project: "mini-bridge", step: "gallery", caption: "" },
   { file: "IMG_5481.jpg", project: "mini-bridge", step: "process-2.0", caption: "", title: "Assembly/ Testing", desc: "Assembled the printed parts from the CAD, and load tested them." },
   { file: "IMG_5485.jpg", project: "mini-bridge", step: "gallery", caption: "" },
@@ -54,15 +48,11 @@ window.PHOTOS = [
   { file: "IMG_5703.jpg", project: "mini-bridge", step: "process-3.0", caption: "", title: "Iteration/ Features", desc: "Added new features to our bridge to set us apart, and have different connections" },
   { file: "IMG_5736.jpg", project: "mini-bridge", step: "process-4.0", caption: "", desc: "Printing, and testing our final prototype." },
   { file: "IMG_5974.jpg", project: "mini-bridge", step: "cover", caption: "" },
-
-  /* ---- Steel Bridge ---- (process-2 is the two clips in the video section below) */
   { file: "IMG_8065.jpg", project: "steel-bridge", step: "cover", caption: "" },
   { file: "IMG_1760.jpg", project: "steel-bridge", step: "process-1", caption: "", title: "Design & Training", desc: "Got trained to use the welder to create rigid connections between members" },
   { file: "steel-bridge-team.jpg", project: "steel-bridge", step: "process-3.0", caption: "" },
   { file: "IMG_1477.jpg", project: "steel-bridge", step: "process-4.0", caption: "" },
   { file: "IMG_7143.jpg", project: "steel-bridge", step: "process-5", caption: "" },
-
-  /* ---- Soma Pump ---- */
   { file: "pumpcover.jpg", project: "soma-pump", step: "cover", caption: "" },
   { file: "IMG_5514.jpg", project: "soma-pump", step: "process-2", caption: "", title: "Iteration", desc: "Redesigned the pump to accommodate more spinners for a smoother flow." },
   { file: "IMG_4242-clip.webm", project: "soma-pump", step: "process-1.0", caption: "", title: "Initial Design", desc: "Prototyped with 3D printing and created a peristaltic pump that can pump out water.", dir: "videos/soma-pump" },
@@ -74,19 +64,15 @@ window.PHOTOS = [
   { file: "IMG_6367-clip.webm", project: "soma-pump", step: "gallery", caption: "", dir: "videos/soma-pump" },
   { file: "IMG_6369-clip.webm", project: "soma-pump", step: "gallery", caption: "", dir: "videos/soma-pump" },
   { file: "IMG_6422-clip.webm", project: "soma-pump", step: "process-5.0", caption: "", title: "Current setup", desc: "Refining the design and integrating the pump subsystem with a closed feedback loop for PID control.", dir: "videos/soma-pump" },
-
-  /* ---- Stair-Climbing Robot ---- */
   { file: "stairmaster-cover.jpg", project: "stair-robot", step: "cover", caption: "" },
-  { file: "IMG_4089.jpg", project: "stair-robot", step: "process-1", caption: "" },
-  { file: "IMG_4200.jpg", project: "stair-robot", step: "process-2", caption: "", title: "Prototyping" },
-  { file: "IMG_4211.jpg", project: "stair-robot", step: "process-2", caption: "" },
-  { file: "IMG_4271.jpg", project: "stair-robot", step: "process-2", caption: "" },
-  { file: "IMG_3612.jpg", project: "stair-robot", step: "process-4", caption: "", title: "Iterating" },
+  { file: "IMG_4089.jpg", project: "stair-robot", step: "process-1", caption: "", desc: "After the competition was announced, my friend and I went to the stairs to start getting data." },
+  { file: "IMG_4200.jpg", project: "stair-robot", step: "process-2", caption: "", title: "Prototyping", desc: "Printed and tested sprockets for the chain we used in our drivetrain." },
+  { file: "IMG_4211.jpg", project: "stair-robot", step: "process-2", caption: "", desc: "Printed and tested sprockets for the chain we used in our drivetrain." },
+  { file: "IMG_4271.jpg", project: "stair-robot", step: "process-2", caption: "", desc: "Printed and tested sprockets for the chain we used in our drivetrain." },
+  { file: "IMG_3612.jpg", project: "stair-robot", step: "process-4", caption: "(This ended up back firing, and we switched back to the old sprockets)", title: "Iterating", desc: "The night before the competition, we sought to replace all the old sprockets with new ones." },
   { file: "IMG_1037.jpg", project: "stair-robot", step: "process-5.0", caption: "" },
   { file: "IMG_2048.jpg", project: "stair-robot", step: "gallery", caption: "" },
   { file: "IMG_4320.jpg", project: "stair-robot", step: "gallery", caption: "" },
-
-  /* ---- Kealakehe ---- */
   { file: "IMG_9454.jpg", project: "kealakehe", step: "process-1", caption: "" },
   { file: "1CAEA98B-4303-4993-B4BE-D700FBB9C526.jpg", project: "kealakehe", step: "process-2", caption: "" },
   { file: "IMG_9670.jpg", project: "kealakehe", step: "process-3", caption: "" },
@@ -96,9 +82,6 @@ window.PHOTOS = [
   { file: "IMG_7885.jpg", project: "kealakehe", step: "gallery", caption: "" },
   { file: "IMG_9738.jpg", project: "kealakehe", step: "gallery", caption: "" },
   { file: "IMG_9886.jpg", project: "kealakehe", step: "gallery", caption: "" },
-
-  /* ---- Personal photos (portrait → homepage hero · gallery → personal set)
-     NOTE: these need a display section wired up — see notes. ---- */
   { file: "IMG_0398.jpg", project: "personal", step: "gallery", caption: "" },
   { file: "IMG_5021.jpg", project: "personal", step: "gallery", caption: "" },
   { file: "IMG_6243.jpg", project: "personal", step: "gallery", caption: "" },
@@ -106,8 +89,6 @@ window.PHOTOS = [
   { file: "IMG_7858.jpg", project: "personal", step: "gallery", caption: "" },
   { file: "IMG_4567_Original.jpg", project: "personal", step: "portrait", caption: "" },
   { file: "IMG_7737.jpg", project: "personal", step: "portrait", caption: "" },
-
-  /* ---- Video clips (live in videos/<project>/, carry a `dir`) ---- */
   { file: "20260208_011807-clip.webm", project: "rose-arm", step: "process-2.1", caption: "", title: "Prototyping", desc: "Started manufacturing and testing.", dir: "videos/rose-arm" },
   { file: "IMG_1775-clip.webm", project: "rose-arm", step: "gallery", caption: "", dir: "videos/rose-arm" },
   { file: "IMG_2778-clip.webm", project: "rose-arm", step: "gallery", caption: "", dir: "videos/rose-arm" },
@@ -141,5 +122,5 @@ window.PHOTOS = [
   { file: "IMG_7089-clip.webm", project: "uh88-weather", step: "process-4.0", caption: "", dir: "videos/uh88-weather" },
   { file: "IMG_7283-clip.webm", project: "uh88-weather", step: "gallery", caption: "", dir: "videos/uh88-weather" },
   { file: "IMG_7293-clip.webm", project: "uh88-weather", step: "gallery", caption: "", dir: "videos/uh88-weather" },
-
+  { file: "IMG_2044-clip.webm", project: "stair-robot", step: "gallery", caption: "", dir: "videos/stair-robot" },
 ];
