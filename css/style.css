@@ -32,11 +32,7 @@
 *::before,
 *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* `overflow-x: clip` stops any sideways scrolling/panning across the whole
-   site — notably the Process pile, whose tilted cards sweep off-frame by
-   design. Unlike `overflow-x: hidden` it does NOT create a scroll container,
-   so the sticky pinned cards keep working. */
-html { scroll-behavior: smooth; overflow-x: clip; }
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
@@ -1093,6 +1089,13 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 .pile-card:not(.is-front) .pager-slide { pointer-events: none; }
 /* tight viewports: no room outside the card, so tuck the arrows back to its edges */
 @media (max-width: 640px) {
+  /* The process cards rest askew (each card + slide carries its own tilt), so
+     on a full-width phone their tilted corners spilled ~27px past each edge and
+     let the page be dragged sideways. Give the pile a side gutter to absorb the
+     tilt — the cards stay on-screen with their borders intact (no clipping),
+     and nothing overflows to scroll. Sticky pinning is untouched (this pads the
+     pile, not the scroll root). */
+  .process-pile .pile { padding-left: 36px; padding-right: 36px; }
   .pager-prev { left: 6px; }
   .pager-next { right: 6px; }
   .pager-arrow { background: rgba(0, 0, 0, .55); }

@@ -904,8 +904,13 @@ function setSlotMedia(media, entry, overrides) {
     v.onerror = () => { markEmpty(); v.remove(); };
   } else {
     media.querySelectorAll('video').forEach(el => el.remove());
+    // The project cover sits above the fold, so load it eagerly at high
+    // priority instead of lazily — it's the first thing a visitor sees.
+    const isCover = !!(media.closest && media.closest('[data-photo-cover]'));
     let img = media.querySelector('img');
-    if (!img) { img = document.createElement('img'); img.loading = 'lazy'; img.decoding = 'async'; media.insertBefore(img, media.firstChild); }
+    if (!img) { img = document.createElement('img'); img.decoding = 'async'; media.insertBefore(img, media.firstChild); }
+    img.loading = isCover ? 'eager' : 'lazy';
+    if (isCover) img.setAttribute('fetchpriority', 'high');
     img.src = mediaSrc(entry);
     img.alt = cap;
     img.onerror = () => { markEmpty(); img.remove(); };
@@ -950,6 +955,7 @@ function buildGalleryItem(entry, overrides) {
     img.src = mediaSrc(entry);
     img.alt = cap;
     img.loading = 'lazy';
+    img.decoding = 'async';
     img.addEventListener('error', () => { fig.classList.add('is-empty'); img.remove(); });
     fig.append(img, ph, capEl);
   }
@@ -1899,6 +1905,32 @@ function openPersonalPicker(slotName) {
   applyLive();   // initialize the "N selected" count
 }
 
+/* ---- Warm images just before they scroll into view ----
+   Lazy images only fetch when they're nearly on-screen, which shows up as a
+   pop-in mid-scroll (and varies a lot between browsers). This watches every
+   lazy image and, once it's within ~1.5 screens of the viewport, fetches it
+   into cache so the real <img> paints instantly when you arrive. Nothing is
+   downloaded until you head toward it — we never front-load all ~200MB of
+   media — and each source is warmed at most once. */
+function initMediaPrefetch() {
+  if (!('IntersectionObserver' in window)) return;
+  const warmed = new Set();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const img = e.target;
+      io.unobserve(img);
+      const src = img.currentSrc || img.getAttribute('src');
+      if (!src || warmed.has(src)) return;
+      warmed.add(src);
+      const pre = new Image();
+      pre.decoding = 'async';
+      pre.src = src;               // populate the cache; the lazy <img> then hits it
+    });
+  }, { rootMargin: '1500px 0px' });
+  document.querySelectorAll('img[loading="lazy"]').forEach((img) => io.observe(img));
+}
+
 /* ---- boot ---- */
 document.addEventListener('DOMContentLoaded', () => {
   injectLayout();
@@ -1917,4 +1949,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initVideoFolder();
   initGoals();
   initPersonalSlots();
+  initMediaPrefetch();   // warm images just ahead of the scroll
 });
