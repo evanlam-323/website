@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=27" />
+  <link rel="stylesheet" href="css/style.css?v=28" />
 </head>
 <body data-page="project" data-project="uh88-weather">
 
@@ -17,9 +17,9 @@
   <main class="section-dark grid-bg">
     <div class="page-hero">
       <a class="back-link" href="index.html#work">← Back to Work</a>
-      <p class="eyebrow">Institute for Astronomy · <span class="brand">Akamai</span> Program / Summer 2026</p>
+      <p class="eyebrow">Institute for Astronomy · Summer 2026</p>
       <h1>UH 88″ Deployable Weather Sensor</h1>
-      <p>During the Akamai Internship at the Institute for Astronomy, I designed a deployable mechanism that extends a Boltwood Cloud Sensor out over the shutter of the UH 88-inch telescope on Maunakea — reading sky conditions in real time, then stowing clear so the dome can safely close.</p>
+      <p>At the Institute for Astronomy, I designed a deployable mechanism that extends a Boltwood Cloud Sensor out over the shutter of the UH 88-inch telescope on Maunakea — reading sky conditions in real time, then stowing clear so the dome can safely close.</p>
     </div>
 
     <div class="wrap">
@@ -33,34 +33,18 @@
         <div class="project-overview">
           <h2>Overview</h2>
           <p>Maunakea is one of the harshest observing sites on Earth — 60+ mph winds, freezing rain, and heavy ice buildup. Telescopes rely on roof-mounted weather sensors to decide when to close, but the summit's previous cloud sensor was lost to those conditions, and a fixed sensor can foul the dome as it opens and closes.</p>
-          <p>My project solves that: a <strong>deployable sensor arm</strong> that drives a Boltwood Cloud Sensor II — plus an HQ camera — out past the telescope railings to take a clean reading, then retracts fully out of the shutter's path. It runs on two encoded <span class="brand">goBILDA</span> Viper linear rails on a rotating base, all carried on a rigid <strong>Unistrut</strong> frame that clears the existing rails and wiring.</p>
-          <p>Everything is driven by a Raspberry Pi 5 and a RoboClaw motor controller, with a web dashboard I built to jog the rails and read live weather from any phone or laptop on the network. I designed, machined, wired, and tested the full unit over a 6-week internship, culminating in a Critical Design Review.</p>
+          <p>My project solves that: a <strong>deployable sensor arm</strong> that drives a Boltwood Cloud Sensor II — plus an HQ camera — out past the telescope railings to take a clean reading, then retracts fully out of the shutter's path.</p>
         </div>
 
         <aside class="project-specs">
           <h3>Specifications</h3>
           <dl>
             <div class="spec-row"><dt>Role</dt><dd>Akamai Intern — sole designer</dd></div>
-            <div class="spec-row"><dt>Site</dt><dd>UH 88″ Telescope, Maunakea</dd></div>
-            <div class="spec-row"><dt>Actuation</dt><dd>2× goBILDA Viper rails · rotating base</dd></div>
-            <div class="spec-row"><dt>Controls</dt><dd>Raspberry Pi 5 · RoboClaw · web UI</dd></div>
-            <div class="spec-row"><dt>Rating</dt><dd>60 mph wind · rain &amp; ice</dd></div>
+            <div class="spec-row"><dt>Team</dt><dd>Solo</dd></div>
+            <div class="spec-row"><dt>Process</dt><dd>CAD · Machining · Wiring</dd></div>
             <div class="spec-row"><dt>Organization</dt><dd>Institute for Astronomy</dd></div>
           </dl>
         </aside>
-      </section>
-
-      <section class="constraints-section">
-        <p class="eyebrow">Design envelope</p>
-        <h2 class="process-head">Key Constraints</h2>
-        <ul class="constraint-list">
-          <li><span>60 mph + rain</span>Must survive summit winds and freezing precipitation.</li>
-          <li><span>Low voltage only</span>No pneumatics, hydraulics, large springs, or counterweights.</li>
-          <li><span>No wireless</span>Light and radio emissions are prohibited near the instrument.</li>
-          <li><span>Fail-safe close</span>If the mechanism jams, the dome must still be able to close.</li>
-          <li><span>Zero interference</span>Nothing may contact the telescope — deployed or stowed.</li>
-          <li><span>Cloud sensor</span>Carry the Boltwood Cloud Sensor II as the primary payload.</li>
-        </ul>
       </section>
 
       <section class="process-section process-pile process-pile--index">
@@ -143,7 +127,7 @@
   </main>
 
   <div id="footer-mount"></div>
-  <script src="js/photos.js?v=27"></script>
-  <script src="js/main.js?v=27"></script>
+  <script src="js/photos.js?v=28"></script>
+  <script src="js/main.js?v=28"></script>
 </body>
 </html>
