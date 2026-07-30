@@ -32,7 +32,11 @@
 *::before,
 *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+/* `overflow-x: clip` stops any sideways scrolling/panning across the whole
+   site — notably the Process pile, whose tilted cards sweep off-frame by
+   design. Unlike `overflow-x: hidden` it does NOT create a scroll container,
+   so the sticky pinned cards keep working. */
+html { scroll-behavior: smooth; overflow-x: clip; }
 
 body {
   background: var(--bg);
@@ -1500,6 +1504,18 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
   .nav { gap: 18px; }
   .nav a { font-size: .72rem; letter-spacing: .1em; }
   .footer-bottom-inner { flex-direction: column; }
+
+  /* Kill the sideways scroll: work-grid cards were holding a ~480px
+     min-content floor (the meta row + description), so a single-column
+     card overflowed a 375px phone and the whole page could be dragged
+     left/right — which read as the layout being "zoomed in" and cut off.
+     Let the card and its meta row shrink/wrap to the viewport. */
+  .project { min-width: 0; }
+  .project-meta { flex-wrap: wrap; min-width: 0; gap: 6px; }
+  .project-title,
+  .project-desc,
+  .project-cat,
+  .project-year { overflow-wrap: anywhere; }
   /* Mobile: the nav row is too cramped to float a 240px menu beside
      the parent without clipping, so anchor the dropdown to the header
      and let it open rightward across the row, pinned inside both
