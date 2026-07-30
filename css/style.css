@@ -1068,16 +1068,18 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 .card-desc { color: var(--text-dim); font-size: .9rem; line-height: 1.5; margin-top: 14px; }
 .pager-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 4;
-  width: 38px; height: 38px; display: grid; place-items: center;
-  /* Solid dark disc + bright ring so the arrow reads on both the dark page
-     (outside the card) and over a photo. The old near-transparent fill was
-     effectively invisible. */
-  background: rgba(18, 18, 20, .72); border: 1px solid rgba(255, 255, 255, .55); border-radius: 50%;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .45);
+  width: 40px; height: 40px; display: grid; place-items: center;
+  /* On DESKTOP the arrows sit at left/right:-54px — OUT in the near-black page
+     gutter beside the card. A dark disc there is invisible (that's why arrows
+     "showed on mobile but not desktop": mobile pins them at +6px over the photo).
+     So give them a solid dark disc + a bright ACCENT ring and a faint accent
+     halo — that reads unmistakably on the dark gutter AND over a photo. */
+  background: rgba(14, 14, 16, .92); border: 2px solid var(--accent); border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .55), 0 0 0 4px rgba(234, 74, 42, .14);
   color: #fff; font-size: 1.4rem; line-height: 1; cursor: pointer;
-  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+  transition: background .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease;
 }
-.pager-arrow:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-50%) scale(1.1); }
+.pager-arrow:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-50%) scale(1.12); box-shadow: 0 6px 18px rgba(0, 0, 0, .55), 0 0 0 5px rgba(234, 74, 42, .22); }
 .pager-prev { left: -54px; }
 .pager-next { right: -54px; }
 .pager-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
