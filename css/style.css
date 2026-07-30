@@ -1553,10 +1553,17 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
    are off-screen. `contain-intrinsic-size: auto <fallback>`
    reserves space up front (no scrollbar jump) and then
    remembers each block's real rendered size after first paint.
+
+   NOTE — .pile-card must NOT be listed here. `content-visibility: auto`
+   implies `contain: paint`, which clips a box's descendants to its own border
+   box. The pager arrows are absolutely positioned at left/right: -54px, i.e.
+   OUTSIDE the card, so containment erased them on desktop. The dots (inside
+   the card) and the mobile arrows (tucked to +6px, also inside) kept showing —
+   which is exactly why this looked like a "desktop-only" arrow bug. The heavy
+   media inside the pile is already deferred via .pager-slide.
    ========================================================= */
 .project,
 .pager-slide,
-.pile-card,
 .gallery-item {
   content-visibility: auto;
   contain-intrinsic-size: auto 480px;
