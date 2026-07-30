@@ -9,6 +9,7 @@
 window.PHOTOS = [
 
   /* ---- UH 88" Deployable Weather Sensor ---- */
+  { file: "uh88-cover.jpg", project: "uh88-weather", step: "cover", caption: "" },
   { file: "IMG_6886.jpg", project: "uh88-weather", step: "process-1", caption: "", desc: "Studied the existing roof sensors and located possible mounting locations" },
   { file: "IMG_6888.jpg", project: "uh88-weather", step: "process-1.1", caption: "", desc: "Studied the existing roof sensors and located possible mounting locations" },
   { file: "IMG_6943.jpg", project: "uh88-weather", step: "process-2", caption: "", title: "Design" },

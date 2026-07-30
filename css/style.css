@@ -651,7 +651,7 @@ ul { list-style: none; }
 .page-hero p { color: var(--text-dim); max-width: 52ch; margin-top: 26px; font-size: 1.05rem; }
 /* The numbered eyebrow keeps the accent color (matches the homepage hero) —
    the .page-hero p rule above would otherwise dim it to grey. */
-.page-hero .eyebrow { color: var(--accent); margin-top: 0; margin-bottom: 16px; font-size: .86rem; }
+.page-hero .eyebrow { color: var(--accent); margin-top: 0; margin-bottom: 16px; font-size: .86rem; max-width: none; }
 
 /* About hero: intro text on the left, photo slot on the right */
 .about-hero {
@@ -851,7 +851,10 @@ ul { list-style: none; }
 .project-cover .tag {
   position: absolute; top: 20px; left: 20px; z-index: 2;
   font-family: var(--font-mono); font-size: .7rem; letter-spacing: .2em;
-  color: var(--text-dim2); text-transform: uppercase;
+  color: rgba(255,255,255,.85); text-transform: uppercase;
+  padding: 5px 10px; border-radius: 4px;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 .project-cover img {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
