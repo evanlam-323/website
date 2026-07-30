@@ -451,10 +451,17 @@ function initProcessPile() {
       // In edit mode every card is "front" so its back-card lockouts (arrows,
       // dots, Move buttons, pager slides) are all interactive; otherwise only
       // the landed card is.
-      cards[i].classList.toggle('is-front', editing || i === front);
+      const isFront = editing || i === front;
+      cards[i].classList.toggle('is-front', isFront);
       // Only the front card receives clicks; the transparent/behind cards are
       // still stacked on top of things and would otherwise swallow them.
       if (!flat) cards[i].style.pointerEvents = i === front ? 'auto' : 'none';
+      // Scrolling to another step should stop a clip you were watching on the
+      // step you left — pause every video on cards that aren't on top so its
+      // audio and picture both halt. (Flat/edit mode keeps every card "front".)
+      if (!flat && !isFront) {
+        cards[i].querySelectorAll('video').forEach(v => { if (!v.paused) v.pause(); });
+      }
     }
   };
 

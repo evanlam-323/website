@@ -59,6 +59,9 @@ ul { list-style: none; }
   color: var(--accent);
 }
 .eyebrow.dim { color: var(--text-dim); }
+/* The homepage hero's numbered eyebrow (Portfolio / 01) is bumped up to match
+   the enlarged eyebrows on the About and Certifications pages. */
+.hero-copy .eyebrow { font-size: .86rem; }
 
 /* preserve brand casing (e.g. RoSE, SoMa) inside uppercased labels */
 .brand { text-transform: none; }
@@ -552,16 +555,19 @@ ul { list-style: none; }
 }
 .research-hero {
   max-width: var(--maxw); margin: 0 auto;
-  padding: clamp(90px, 12vw, 150px) var(--pad) clamp(40px, 6vw, 70px);
+  /* Trimmed bottom padding so the table below sits a little higher. */
+  padding: clamp(90px, 12vw, 150px) var(--pad) clamp(18px, 3vw, 34px);
 }
-.research-index { font-family: var(--font-mono); font-size: .78rem; letter-spacing: .3em; color: var(--accent); margin-bottom: 14px; }
-.research-hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(32px, 5vw, 68px); align-items: end; }
+.research-index { font-family: var(--font-mono); font-size: .86rem; letter-spacing: .3em; color: var(--accent); margin-bottom: 14px; }
+/* align-items: center vertically centres the big title against the taller lede
+   paragraph. The wider gap pushes the paragraph further right. */
+.research-hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(40px, 5.5vw, 80px); align-items: center; }
 .research-title {
   font-family: var(--font-display); font-weight: 900; text-transform: uppercase;
   font-size: clamp(2.6rem, 7vw, 5.4rem); line-height: .9; letter-spacing: -.02em; color: #fff;
 }
 .research-title .amp { color: var(--accent); }
-.research-lede { color: var(--text-dim); max-width: 42ch; line-height: 1.8; }
+.research-lede { color: var(--text-dim); max-width: 52ch; line-height: 1.8; }
 
 .research-body {
   max-width: var(--maxw); margin: 0 auto;
@@ -628,7 +634,9 @@ ul { list-style: none; }
    GENERIC PAGE HEADER (projects / about)
    ========================================================= */
 .page-hero {
-  padding: clamp(120px, 16vw, 200px) var(--pad) clamp(50px, 7vw, 90px);
+  /* Top padding matches .research-hero so the About/Projects headers start at
+     the same height as the Certifications page. */
+  padding: clamp(90px, 12vw, 150px) var(--pad) clamp(50px, 7vw, 90px);
   max-width: var(--maxw); margin: 0 auto;
   background:
     radial-gradient(90% 70% at 0% 0%, rgba(234,74,42,.12), transparent 55%),
@@ -636,9 +644,14 @@ ul { list-style: none; }
 }
 .page-hero h1 {
   font-family: var(--font-display); font-weight: 900; text-transform: uppercase;
-  font-size: clamp(3rem, 11vw, 8rem); line-height: .88; letter-spacing: -.02em; color: #fff;
+  /* Match the Certifications title (.research-title) size so the two page
+     headings read as one system. */
+  font-size: clamp(2.6rem, 7vw, 5.4rem); line-height: .9; letter-spacing: -.02em; color: #fff;
 }
 .page-hero p { color: var(--text-dim); max-width: 52ch; margin-top: 26px; font-size: 1.05rem; }
+/* The numbered eyebrow keeps the accent color (matches the homepage hero) —
+   the .page-hero p rule above would otherwise dim it to grey. */
+.page-hero .eyebrow { color: var(--accent); margin-top: 0; margin-bottom: 16px; font-size: .86rem; }
 
 /* About hero: intro text on the left, photo slot on the right */
 .about-hero {
