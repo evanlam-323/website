@@ -26,7 +26,7 @@ const SITE = {
     { label: 'Steel Bridge',            href: 'project-steel-bridge.html' },
     { label: 'Additive Pump Subsystem', href: 'project-soma-pump.html' },
     { label: 'Stair-Climbing Robot',    href: 'project-stair-robot.html' },
-    { label: 'FIRST Robotics',          href: 'project-kealakehe.html' },
+    { label: 'FIRST Robotics',          href: 'project-first.html' },
   ],
 };
 

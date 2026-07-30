@@ -27,7 +27,7 @@ Context for another chat/session to continue the work. Delete this file when don
 
 ## Pages
 - `index.html` — hero (portrait is now an editable **personal photo slot**) + **Work grid** with a multi-select discipline filter. `research.html`. `about.html` — hero now two-column (intro left, **editable photo slot** right); the old **Timeline was replaced by a Goals checklist**.
-- Seven project detail pages: `project-uh88-weather.html`, `project-rose-arm.html`, `project-mini-bridge.html`, `project-steel-bridge.html`, `project-soma-pump.html`, `project-stair-robot.html`, `project-kealakehe.html`.
+- Seven project detail pages: `project-uh88-weather.html`, `project-rose-arm.html`, `project-mini-bridge.html`, `project-steel-bridge.html`, `project-soma-pump.html`, `project-stair-robot.html`, `project-first.html`.
 - `video-trimmer.html` — **author-only tool** (see below), not linked from the public site.
 
 ## Project-page conventions
