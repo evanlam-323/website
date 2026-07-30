@@ -536,6 +536,13 @@ function initCardPagers() {
     let i = 0;
     let animating = false;
 
+    // Grey out (and disable) the arrow you can't use: prev at the first photo,
+    // next at the last. The pager no longer wraps around.
+    const updateArrows = () => {
+      prev.classList.toggle('is-disabled', i <= 0);
+      next.classList.toggle('is-disabled', i >= slides.length - 1);
+    };
+
     // Take over: stack the slides so they can overlap during the sweep. Only the
     // .is-current slide flows (and sizes the box); the rest sit absolutely on top.
     pager.classList.add('js-pager');
@@ -562,9 +569,10 @@ function initCardPagers() {
       if (n === 0) s.style.transform = `rotate(${s._rest.toFixed(2)}deg)`;
     });
     dots.forEach((d, n) => d.classList.toggle('is-active', n === 0));
+    updateArrows();   // prev starts disabled on the first photo
 
     const go = (n, dir) => {
-      n = (n + slides.length) % slides.length;
+      if (n < 0 || n >= slides.length) return;   // no wrap-around at the ends
       if (n === i || animating) return;
       // Which way the new card sweeps in from. Arrows say so explicitly (next
       // enters from the right); dots infer it from the jump direction.
@@ -583,6 +591,7 @@ function initCardPagers() {
         nxt.style.cssText = '';
         nxt.style.transform = `rotate(${nxt._rest.toFixed(2)}deg)`;
         i = n;
+        updateArrows();
         return;
       }
 
@@ -634,6 +643,7 @@ function initCardPagers() {
       const timer = setTimeout(finish, 850); // fallback if transitionend misses
 
       i = n;
+      updateArrows();
     };
 
     prev.addEventListener('click', () => go(i - 1, -1));

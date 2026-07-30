@@ -1069,7 +1069,11 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 .pager-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 4;
   width: 38px; height: 38px; display: grid; place-items: center;
-  background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .28); border-radius: 50%;
+  /* Solid dark disc + bright ring so the arrow reads on both the dark page
+     (outside the card) and over a photo. The old near-transparent fill was
+     effectively invisible. */
+  background: rgba(18, 18, 20, .72); border: 1px solid rgba(255, 255, 255, .55); border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .45);
   color: #fff; font-size: 1.4rem; line-height: 1; cursor: pointer;
   transition: background .2s ease, border-color .2s ease, transform .2s ease;
 }
@@ -1082,6 +1086,9 @@ body[data-project="stair-robot"] .pile-card[data-slot="process-1"] .card-media i
 .pager-arrow, .pager-dots { transition: opacity .2s ease; }
 .pile-card:not(.is-front) .pager-arrow,
 .pile-card:not(.is-front) .pager-dots { opacity: 0; pointer-events: none; }
+/* At the first/last photo the unusable arrow greys out and stops responding
+   (the pager no longer wraps around). JS toggles .is-disabled — see initCardPagers. */
+.pager-arrow.is-disabled { opacity: .22; pointer-events: none; cursor: default; box-shadow: none; }
 /* ...and its slides must not catch clicks either: a card still sitting in the
    pile has a higher z-index, and its .is-current slide re-enables
    pointer-events — without this it steals clicks aimed at the FRONT card's
